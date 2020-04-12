@@ -2,11 +2,104 @@
 using System;
 using System.Collections.Generic;
 
-namespace _5Straight.data
+namespace _5Straight.Data
 {
-    public static class BoardFactory
+    public static class GameStateFactory
     {
-        public static List<BoardLocation> BuildNewBoard()
+        public static readonly int[] positionOrder = new int[] {73, 72, 71, 70, 69, 68, 67, 66, 65, 0, 74, 57, 58, 59, 60, 61, 62, 63, 64, 99, 75, 56, 21, 20, 19, 18, 17, 36, 37, 98,
+                            76, 55, 22, 13, 14, 15, 16, 35, 38, 97, 77, 54, 23, 12, 1, 4, 5, 34, 39, 96, 78, 53, 24, 11, 2, 3, 6, 33, 40, 95, 79, 52, 25, 10, 9, 8, 7, 32, 41, 94,
+                            80, 51, 26, 27, 28, 29, 30, 31, 42, 93, 81, 50, 49, 48, 47, 46, 45, 44, 43, 92, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91 };
+
+
+        public static GameState BuildNewGameState(int numberOfTeams, int numberOfPlayersOnEachTeam)
+        {
+            var board = BuildNewBoard();
+            var players = BuildPlayers(numberOfPlayersOnEachTeam * numberOfTeams);
+            var teams = BuildTeams(numberOfTeams, players);
+            var deck = BuildDeck();
+            DealCards(players, deck);
+
+            return new GameState(board, deck, teams, players);
+        }
+
+        private static void DealCards(List<Player> players, List<int> deck)
+        {
+            // deals 4 cards round robin
+            for (int i = 0; i < 4; i++)
+            {
+                foreach (var player in players)
+                {
+                    player.Hand.Add(deck[0]);
+                    deck.RemoveAt(0);
+                }
+            }
+        }
+
+        private static List<Team> BuildTeams(int numberOfTeams, List<Player> players)
+        {
+            var teams = new List<Team>();
+
+            for (int i = 0; i < numberOfTeams; i++)
+            {
+                teams.Add(new Team()
+                {
+                    TeamNumber = i,
+                    TeamColor = $"teamColor{i}",
+                    Players = new List<Player>()
+                });
+            }
+
+            int team = 0;
+            foreach (var player in players)
+            {
+                teams[team%numberOfTeams].Players.Add(player);
+                player.Team = teams[team % numberOfTeams];
+                team++;
+            }
+            return teams;
+        }
+
+        private static List<Player> BuildPlayers(int numberOfPlayers)
+        {
+            var players = new List<Player>();
+            for (var i = 0; i < numberOfPlayers; i++)
+            {
+                var tempPlayer = new Player
+                {
+                    //Set Player number
+                    PlayerNumber = i,
+                    Hand = new List<int>()
+                };
+                players.Add(tempPlayer);
+            };
+            return players;
+        }
+
+        private static List<int> BuildDeck()
+        {
+            var deck = new List<int>();
+            for (int i = 0; i < 100; i++)
+            {
+                deck.Add(i);
+            }
+            deck = ShuffleDeck(deck);
+            return ShuffleDeck(deck);
+        }
+
+        private static List<int> ShuffleDeck(List<int> deck)
+        {
+            var rand = new Random();
+            for (var i = deck.Count - 1; i > 0; i--)
+            {
+                var j = rand.Next(100);
+                var temp = deck[i];
+                deck[i] = deck[j];
+                deck[j] = temp;
+            }
+            return deck;
+        }
+
+        private static List<BoardLocation> BuildNewBoard()
         {
             return new List<BoardLocation>()
             {
@@ -111,44 +204,6 @@ namespace _5Straight.data
                 new BoardLocation() { DisplayNumber = "98", Number = 98, AdjacentLocations = new List<int?>{ 64, 99, null, null, null, 97, 38, 37 } },
                 new BoardLocation() { DisplayNumber = "99", Number = 99, AdjacentLocations = new List<int?>{ 65, 0, null, null, null, 98, 37, 64 } },
             };
-        }
-
-        public static List<Player> BuildPlayers()
-        {
-            var players = new List<Player>();
-            for (var i = 0; i < 2; i++)
-            {
-                var tempPlayer = new Player();
-                //Set Player number
-                tempPlayer.PlayerNumber = i;
-                tempPlayer.Hand = new List<int>();
-                players.Add(tempPlayer);
-            };
-            return players;
-        }
-
-        public static List<int> BuildDeck()
-        {
-            var deck = new List<int>();
-            for (int i = 0; i < 100; i++)
-            {
-                deck.Add(i);
-            }
-            deck = ShuffleDeck(deck);
-            return ShuffleDeck(deck);
-        }
-
-        private static List<int> ShuffleDeck(List<int> deck)
-        {
-            var rand = new Random();
-            for (var i = deck.Count - 1; i > 0; i--)
-            {
-                var j = rand.Next(100);
-                var temp = deck[i];
-                deck[i] = deck[j];
-                deck[j] = temp;
-            }
-            return deck;
         }
     }
 }

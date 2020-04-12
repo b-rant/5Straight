@@ -15,5 +15,7 @@ namespace _5Straight.Data.Models
         [JsonProperty("_id")]
         public string Id { get; set; }
 
+        public Team Team { get; set; }
+
     }
 }
