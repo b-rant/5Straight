@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using _5Straight.Data;
+using _5Straight.Data.Proxies;
 
 namespace _5Straight
 {
@@ -43,6 +44,8 @@ namespace _5Straight
 
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddSingleton<TableService>();
+            services.AddSingleton<GameStateTable>();
             services.AddSingleton<GameManager>();
         }
 

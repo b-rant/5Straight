@@ -1,11 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Azure.Cosmos.Table;
+using System;
+using System.Collections.Generic;
 
 namespace _5Straight.Data.Models
 {
-    public class GameState
+    public class GameState : TableEntity
     {
+        public GameState()
+        {
+        }
+
         public GameState(List<BoardLocation> board, List<int> deck, List<Team> teams, List<Player> players)
         {
+            PartitionKey = "GameState";
+            RowKey = Guid.NewGuid().ToString();
             Board = board;
             Deck = deck;
             Teams = teams;

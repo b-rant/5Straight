@@ -119,7 +119,7 @@
     protected override void OnInitialized()
     {
         try {
-            game = new Game(GameManager.Games[gameId]);
+            game = GameManager.Games[gameId];
         }
         catch
         {
