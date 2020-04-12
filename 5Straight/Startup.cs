@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using _5Straight.Data;
 using _5Straight.Data.Proxies;
+using Blazored.Modal;
 
 namespace _5Straight
 {
@@ -47,6 +48,7 @@ namespace _5Straight
             services.AddSingleton<TableService>();
             services.AddSingleton<GameStateTable>();
             services.AddSingleton<GameManager>();
+            services.AddBlazoredModal();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

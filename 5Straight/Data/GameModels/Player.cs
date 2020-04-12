@@ -17,5 +17,7 @@ namespace _5Straight.Data.Models
 
         public Team Team { get; set; }
 
+        public string PlayerOwner { get; set; }
+
     }
 }
