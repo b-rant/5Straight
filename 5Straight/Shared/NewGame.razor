@@ -1,0 +1,59 @@
+﻿@using _5Straight.Data
+@inject GameManager GameManager
+
+@if (!GameCreated)
+{
+    <div class="simple-form">
+        <div class="form-group">
+            <label for="game-name">Game Name</label>
+            <input @bind="GameName" type="text" class="form-control" id="game-name" placeholder="Enter a name for the Game" />
+        </div>
+        <div class="form-group">
+            <label for="numberOfTeams">Number of Teams</label>
+            <select @bind="NumberOfTeams" class="form-control" id="numberOfTeams">
+                <option selected>2</option>
+                <option>3</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="numberOfPlayers">Number of Players on each Team</label>
+            <select @bind="NumberOfPlayersOnEachTeam" class="form-control" id="numberOfPlayers">
+                <option selected>1</option>
+                <option>2</option>
+                <option>3</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="totalPlayers">Total number of players in game</label>
+            <input id="totalPlayers" class="form-control" type="text" placeholder="@TotalNumberOfPlayers" readonly>
+        </div>
+
+        <button @onclick="SubmitForm" class="btn btn-primary">Submit</button>
+
+    </div>
+}
+else
+{
+    <div class="alert alert-success" role="alert">
+        New game was created with name: @GameName
+    </div>
+}
+
+
+
+@code {
+
+    public string GameName { get; set; }
+    public int NumberOfTeams { get; set; }
+    public int NumberOfPlayersOnEachTeam { get; set; }
+    public int TotalNumberOfPlayers => NumberOfTeams * NumberOfPlayersOnEachTeam;
+    public bool GameCreated { get; set; } = false;
+
+    public void SubmitForm()
+    {
+        //string gameId = GameManager.CreateNewGame(GameName, NumberOfTeams, NumberOfPlayersOnEachTeam);
+        GameCreated = true;
+    }
+}

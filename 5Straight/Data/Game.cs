@@ -48,7 +48,7 @@ namespace _5Straight.Data
                 TurnNumber = GameState.TurnNumber
             });
 
-            if (CheckWinCondition(location, player))
+            if (CheckWinCondition(location, player.Team))
             {
                 GameState.Won = true;
                 GameState.WinningPlayer = GameState.CurrentPlayer;
@@ -120,12 +120,12 @@ namespace _5Straight.Data
             GameState.Board[locationNumber].FilledBy = player;
         }
 
-        private bool CheckWinCondition(int location, Player player)
+        private bool CheckWinCondition(int location, Team team)
         {
-            var NW_SE = RecursiveBoardWinSearch(location, player, 0) + RecursiveBoardWinSearch(location, player, 4);
-            var N_S = RecursiveBoardWinSearch(location, player, 1) + RecursiveBoardWinSearch(location, player, 5);
-            var NE_SW = RecursiveBoardWinSearch(location, player, 2) + RecursiveBoardWinSearch(location, player, 6);
-            var W_E = RecursiveBoardWinSearch(location, player, 3) + RecursiveBoardWinSearch(location, player, 7);
+            var NW_SE = RecursiveBoardWinSearch(location, team, 0) + RecursiveBoardWinSearch(location, team, 4);
+            var N_S = RecursiveBoardWinSearch(location, team, 1) + RecursiveBoardWinSearch(location, team, 5);
+            var NE_SW = RecursiveBoardWinSearch(location, team, 2) + RecursiveBoardWinSearch(location, team, 6);
+            var W_E = RecursiveBoardWinSearch(location, team, 3) + RecursiveBoardWinSearch(location, team, 7);
 
             if (NW_SE >= 6 || N_S >= 6 || NE_SW >= 6 || W_E >= 6)
             {
@@ -134,10 +134,10 @@ namespace _5Straight.Data
             return false;
         }
 
-        private int RecursiveBoardWinSearch(int location, Player player, int direction)
+        private int RecursiveBoardWinSearch(int location, Team team, int direction)
         {
             //if the location is filled by the current user
-            if (GameState.Board[location].FilledBy == player)
+            if (team.Players.Contains(GameState.Board[location].FilledBy))
             {
                 //if it is, then check the next locaiton.
                 var tempDirection = GameState.Board[location].AdjacentLocations[direction];
@@ -146,7 +146,7 @@ namespace _5Straight.Data
                 {
                     return 1;
                 };
-                return (1 + RecursiveBoardWinSearch((int)tempDirection, player, direction));
+                return (1 + RecursiveBoardWinSearch((int)tempDirection, team, direction));
             }
             return 0;
         }
