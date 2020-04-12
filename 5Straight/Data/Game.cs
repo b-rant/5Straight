@@ -1,15 +1,19 @@
 ﻿using _5Straight.Data.Models;
+using _5Straight.Data.Proxies;
+using Microsoft.Azure.Cosmos.Table;
 using System.Linq;
 
 namespace _5Straight.Data
 {
-    public class Game
+    public class Game : TableEntity
     {
         public readonly GameState GameState;
+        public readonly string GameName;
 
-        public Game(GameState game)
+        public Game(string gameName, GameState initialState)
         {
-            GameState = game;
+            GameName = gameName;
+            GameState = initialState;
         }
 
         // Public Functions
