@@ -5,31 +5,18 @@ namespace _5Straight.Data
 {
     public class Game
     {
-        private readonly GameData GameData;
+        public readonly GameState GameState;
 
-        public Game(GameData game)
+        public Game(GameState game)
         {
-            GameData = game;
-            Deal();
+            GameState = game;
         }
 
         // Public Functions
 
         public Player GetPlayerByNumber(int playerNumber)
         {
-            return GameData.Players[playerNumber];
-        }
-
-        public bool MakePlay(Play play)
-        {
-            if (play.Draw)
-            {
-                return PlayDrawCard(GameData.Players[play.PlayerNumber]);
-            }
-            else
-            {
-                return PlayLocation(GameData.Players[play.PlayerNumber], play.PlayedLocationNumber, play.CardNumber);
-            }
+            return GameState.Players[playerNumber];
         }
 
         public bool PlayLocation(Player player, int location, int card)
@@ -42,25 +29,25 @@ namespace _5Straight.Data
             RemoveCardFromHand(player, card);
             FillLocation(player, location);
 
-            if (location.Equals(GameData.HighestPlayable))
+            if (location.Equals(GameState.HighestPlayable))
             {
                 DetermineHighestPlayable();
             }
 
-            GameData.Plays.Add(new Play()
+            GameState.Plays.Add(new Play()
             {
                 CardNumber = card,
                 PlayedLocationNumber = location,
                 Draw = false,
                 PlayerHand = player.Hand,
                 PlayerNumber = player.PlayerNumber,
-                TurnNumber = GameData.TurnNumber
+                TurnNumber = GameState.TurnNumber
             });
 
             if (CheckWinCondition(location, player))
             {
-                GameData.Won = true;
-                GameData.WinningPlayer = GameData.CurrentPlayer;
+                GameState.Won = true;
+                GameState.WinningPlayer = GameState.CurrentPlayer;
             }
             else
             {
@@ -81,14 +68,14 @@ namespace _5Straight.Data
             var cardDrew = DrawCard();
             AddCardToHand(player, cardDrew);
 
-            GameData.Plays.Add(new Play()
+            GameState.Plays.Add(new Play()
             {
                 CardNumber = cardDrew,
                 PlayedLocationNumber = -1,
                 Draw = true,
                 PlayerHand = player.Hand,
                 PlayerNumber = player.PlayerNumber,
-                TurnNumber = GameData.TurnNumber
+                TurnNumber = GameState.TurnNumber
             });
 
             CheckForAllDeadCards();
@@ -100,22 +87,10 @@ namespace _5Straight.Data
 
         // Private Functions
 
-        private void Deal()
-        {
-            // deals 4 cards round robin
-            for (int i = 0; i < 4; i++)
-            {
-                foreach (var player in GameData.Players)
-                {
-                    player.Hand.Add(DrawCard());
-                }
-            }
-        }
-
         private int DrawCard()
         {
-            var card = GameData.Deck[0];
-            GameData.Deck.RemoveAt(0);
+            var card = GameState.Deck[0];
+            GameState.Deck.RemoveAt(0);
             return card;
         }
 
@@ -131,22 +106,22 @@ namespace _5Straight.Data
 
         private void NextTurn()
         {
-            GameData.TurnNumber++;
-            GameData.CurrentPlayer = GameData.Players[GameData.TurnNumber % GameData.Players.Count];
+            GameState.TurnNumber++;
+            GameState.CurrentPlayer = GameState.Players[GameState.TurnNumber % GameState.Players.Count];
         }
 
         private void FillLocation(Player player, int locationNumber)
         {
-            GameData.Board[locationNumber].Filled = true;
-            GameData.Board[locationNumber].FilledBy = player.PlayerNumber;
+            GameState.Board[locationNumber].Filled = true;
+            GameState.Board[locationNumber].FilledBy = player;
         }
 
         private bool CheckWinCondition(int location, Player player)
         {
-            var NW_SE = RecursiveBoardWinSearch(location, player.PlayerNumber, 0) + RecursiveBoardWinSearch(location, player.PlayerNumber, 4);
-            var N_S = RecursiveBoardWinSearch(location, player.PlayerNumber, 1) + RecursiveBoardWinSearch(location, player.PlayerNumber, 5);
-            var NE_SW = RecursiveBoardWinSearch(location, player.PlayerNumber, 2) + RecursiveBoardWinSearch(location, player.PlayerNumber, 6);
-            var W_E = RecursiveBoardWinSearch(location, player.PlayerNumber, 3) + RecursiveBoardWinSearch(location, player.PlayerNumber, 7);
+            var NW_SE = RecursiveBoardWinSearch(location, player, 0) + RecursiveBoardWinSearch(location, player, 4);
+            var N_S = RecursiveBoardWinSearch(location, player, 1) + RecursiveBoardWinSearch(location, player, 5);
+            var NE_SW = RecursiveBoardWinSearch(location, player, 2) + RecursiveBoardWinSearch(location, player, 6);
+            var W_E = RecursiveBoardWinSearch(location, player, 3) + RecursiveBoardWinSearch(location, player, 7);
 
             if (NW_SE >= 6 || N_S >= 6 || NE_SW >= 6 || W_E >= 6)
             {
@@ -155,32 +130,32 @@ namespace _5Straight.Data
             return false;
         }
 
-        private int RecursiveBoardWinSearch(int location, int playerNumber, int direction)
+        private int RecursiveBoardWinSearch(int location, Player player, int direction)
         {
             //if the location is filled by the current user
-            if (GameData.Board[location].FilledBy == playerNumber)
+            if (GameState.Board[location].FilledBy == player)
             {
                 //if it is, then check the next locaiton.
-                var tempDirection = GameData.Board[location].AdjacentLocations[direction];
+                var tempDirection = GameState.Board[location].AdjacentLocations[direction];
                 //if the next location is undefined, it is out of the board so stop looking
                 if (tempDirection == null)
                 {
                     return 1;
                 };
-                return (1 + RecursiveBoardWinSearch((int)tempDirection, playerNumber, direction));
+                return (1 + RecursiveBoardWinSearch((int)tempDirection, player, direction));
             }
             return 0;
         }
 
         private bool CanPlay(int location, int card, Player player)
         {
-            if (!GameData.Won
+            if (!GameState.Won
                 && location >= 0 
                 && location <= 99
                 && location >= card 
-                && !GameData.Board[location].Filled 
+                && !GameState.Board[location].Filled 
                 && player.Hand.Contains(card)
-                && GameData.CurrentPlayer.Equals(player))
+                && GameState.CurrentPlayer.Equals(player))
             {
                 return true;
             }
@@ -189,9 +164,9 @@ namespace _5Straight.Data
 
         private bool CanDraw(Player player)
         {
-            if (!GameData.Won 
+            if (!GameState.Won 
                 && player.Hand.Count < 4 
-                && GameData.CurrentPlayer.Equals(player))
+                && GameState.CurrentPlayer.Equals(player))
             {
                 return true;
             }
@@ -200,26 +175,26 @@ namespace _5Straight.Data
 
         private void DetermineHighestPlayable()
         {
-            for (int i = GameData.HighestPlayable; i > 0; i--)
+            for (int i = GameState.HighestPlayable; i > 0; i--)
             {
-                if (!GameData.Board[i].Filled)
+                if (!GameState.Board[i].Filled)
                 {
-                    GameData.HighestPlayable = i;
+                    GameState.HighestPlayable = i;
                     return;
                 }
             }
-            GameData.HighestPlayable = 0;
+            GameState.HighestPlayable = 0;
             return;
         }
 
         private void CheckForAllDeadCards()
         {
-            foreach (var player in GameData.Players)
+            foreach (var player in GameState.Players)
             {
-                if (player.Hand.Where(x => x > GameData.HighestPlayable).Count() == 4)
+                if (player.Hand.Where(x => x > GameState.HighestPlayable).Count() == 4)
                 {
-                    GameData.Won = true;
-                    GameData.WinningPlayer = GameData.Players[(player.PlayerNumber + 1) % 2];
+                    GameState.Won = true;
+                    GameState.WinningPlayer = GameState.Players[(player.PlayerNumber + 1) % 2];
                     return;
                 }
             }

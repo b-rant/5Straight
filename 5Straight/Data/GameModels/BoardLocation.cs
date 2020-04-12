@@ -6,7 +6,7 @@ namespace _5Straight.Data.Models
     {
         public BoardLocation()
         {
-            FilledBy = -1;
+            FilledBy = null;
         }
 
         public int Number { get; set; }
@@ -15,7 +15,7 @@ namespace _5Straight.Data.Models
 
         public bool Filled { get; set; }
 
-        public int FilledBy { get; set; }
+        public Player FilledBy { get; set; }
 
         public List<int?> AdjacentLocations { get; set; }
     }
