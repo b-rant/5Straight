@@ -26,7 +26,9 @@ namespace _5Straight.Data
 
         public Game CreateNewGame(string gameName, int numTeams, int numPlayersPerTeam)
         {
-            Game game = GameTable.InsertGame(new Game(gameName, GameStateFactory.BuildNewGameState(numTeams, numPlayersPerTeam)));
+            //Game game = GameTable.InsertGame(new Game(gameName, GameStateFactory.BuildNewGameState(numTeams, numPlayersPerTeam)));
+            Game game = new Game(gameName, GameStateFactory.BuildNewGameState(numTeams, numPlayersPerTeam));
+            game.PartitionKey = $"{Games.Count + 1}";
 
             Games.Add(game.PartitionKey, game);
 

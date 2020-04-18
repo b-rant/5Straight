@@ -9,7 +9,7 @@
 <h3>Game Message: @gameMessage</h3>
 
 
-@if (!game.GameHasStarted)
+@if (game == null || game.GameHasStarted)
 {
     <div id="GameLobbyView">
 
