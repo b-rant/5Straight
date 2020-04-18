@@ -182,8 +182,32 @@ app {
     }
 }
 
-/* Gameboard CSS*/
+/* Team Colors */
+:root {
+    --team0-color: #ff6666;
+    --team1-color: #e3ff00;
+    --team2-color: #0000ee;
+}
 
+/* Nav CSS */
+.five-nav-headers {
+    color: white;
+    text-align: center;
+}
+
+/* Lobby CSS */
+
+#lobby-team-0 {
+}
+
+#lobby-team-1 {
+}
+
+#lobby-team-2{
+
+}
+
+/* Gameboard CSS*/
 #boardContainer {
     padding: 1%;
 }
@@ -214,17 +238,17 @@ app {
 
 .teamColor0 {
     outline: 5px solid #d9534f;
-    outline: 5px solid red;
+    outline: 5px solid var(--team0-color);
     outline-offset: -8px;
 }
 
 .teamColor1 {
-    outline: 5px solid #f0ad4e;
+    outline: 5px solid var(--team1-color);
     outline-offset: -8px;
 }
 
 .teamColor2 {
-    outline: 5px solid blue;
+    outline: 5px solid var(--team2-color);
     outline-offset: -8px;
 }
 

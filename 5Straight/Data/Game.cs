@@ -14,6 +14,8 @@ namespace _5Straight.Data
         public readonly string GameName;
         public readonly List<Delegate> Clients;
 
+        public bool GameHasStarted { get; private set; }
+
         public Game(string gameName, GameState initialState)
         {
             GameName = gameName;
@@ -22,6 +24,19 @@ namespace _5Straight.Data
         }
 
         // Public Functions
+
+        public bool ValidateAndStartGame()
+        {
+            if (GameState.Players.Where(x => string.IsNullOrWhiteSpace(x.PlayerOwner)).Any())
+            {
+                return false;
+            }
+            else
+            {
+                GameHasStarted = true;
+                return true;
+            }
+        }
 
         public Player GetPlayerByNumber(int playerNumber)
         {

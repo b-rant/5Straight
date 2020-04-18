@@ -1,6 +1,8 @@
 ﻿@using _5Straight.Data
 @inject GameManager GameManager
 @inject NavigationManager NavigationManager
+@inject IModalService Modal
+
 
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">5Straight</a>
@@ -14,6 +16,11 @@
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="ShowNewGameModal">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> New Game
             </NavLink>
         </li>
         <li>
@@ -50,6 +57,17 @@
     public void DirectToGame(string gameId)
     {
         NavigationManager.NavigateTo($"GameBoard/{gameId}");
+    }
+
+    void ShowNewGameModal()
+    {
+        var options = new ModalOptions()
+        {
+            DisableBackgroundCancel = true,
+            
+        };
+
+        Modal.Show<NewGame>("Create New Game", options);
     }
 
     protected override void OnInitialized()

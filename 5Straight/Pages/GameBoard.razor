@@ -8,74 +8,86 @@
 <h2>Game: @gameId</h2>
 <h3>Game Message: @gameMessage</h3>
 
-<div class="container playerContainer">
-    <div class="row">
-        <div class="col-md-12" style="background-color:white">
-            <div class="nav-center">
-                <ul id="playerTabs" class="nav nav-pills" role="tablist">
-                    @{
-                        foreach (var player in game.GameState.Players)
-                        {
-                            <li role="presentation" class="nav-item"><a class="nav-link @(game.GameState.CurrentPlayer.Equals(player) ? "active" : "")">Player @(player.PlayerNumber+1)</a></li>
-                        }
-                    }
-                </ul>
+
+@if (!game.GameHasStarted)
+{
+    <div id="GameLobbyView">
+
+    </div>
+}
+else
+{
+    <div id="GameBoardView">
+        <div class="container playerContainer">
+            <div class="row">
+                <div class="col-md-12" style="background-color:white">
+                    <div class="nav-center">
+                        <ul id="playerTabs" class="nav nav-pills" role="tablist">
+                            @{
+                                foreach (var player in game.GameState.Players)
+                                {
+                                    <li role="presentation" class="nav-item"><a class="nav-link @(game.GameState.CurrentPlayer.Equals(player) ? "active" : "")">Player @(player.PlayerNumber + 1)</a></li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                    <div id="optionsContainer">
+                        <div id="drawCardWrapper">
+                            <button type="button" class="btn btn-primary" @onclick="() => MakeDraw()">Draw Card</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="optionsContainer">
-                <div id="drawCardWrapper">
-                    <button type="button" class="btn btn-primary" @onclick="() => MakeDraw()">Draw Card</button>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="boardContainer" align="center">
+                        <table id="board" align="center">
+                            @{
+                                int position = 0;
+                                for (int i = 0; i < 10; i++)
+                                {
+                                    <tr>
+                                        @{
+                                            for (int j = 0; j < 10; j++)
+                                            {
+                                                int locationNumber = GameStateFactory.positionOrder[position];
+
+                                                string classString = "";
+
+                                                <td class="@(game.GameState.Board.Where(x => x.Number.Equals(locationNumber)).FirstOrDefault().FilledBy?.Team?.TeamColor ?? classString)" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
+                                                position++;
+                                            }
+                                        }
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="cardContainer" align="center">
+                        @for (int i = 0; i < 4; i++)
+                        {
+                            @if (game.GameState.CurrentPlayer.Hand.Count >= i + 1)
+                            {
+                                int card = i;
+                                <button type="button" class="btn btn-outline-primary btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(game.GameState.CurrentPlayer.Hand[i])</button>
+                            }
+                        }
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <div id="boardContainer" align="center">
-                <table id="board" align="center">
-                    @{
-                        int position = 0;
-                        for (int i = 0; i < 10; i++)
-                        {
-                            <tr>
-                                @{
-                                    for (int j = 0; j < 10; j++)
-                                    {
-                                        int locationNumber = GameStateFactory.positionOrder[position];
-
-                                        string classString = "";
-
-                                        <td class="@(game.GameState.Board.Where(x => x.Number.Equals(locationNumber)).FirstOrDefault().FilledBy?.Team?.TeamColor ?? classString)" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
-                                        position++;
-                                    }
-                                }
-                            </tr>
-                        }
-                    }
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <div id="cardContainer" align="center">
-                @for (int i = 0; i < 4; i++)
-                {
-                    @if (game.GameState.CurrentPlayer.Hand.Count >= i+1)
-                    {
-                        int card = i;
-                        <button type="button" class="btn btn-outline-primary btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(game.GameState.CurrentPlayer.Hand[i])</button>
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
+}
 
 
 @code {
@@ -85,7 +97,24 @@
     string gameMessage;
     int selectedCard;
 
+    // Init
+    protected override void OnInitialized()
+    {
+        try
+        {
+            game = GameManager.Games[gameId];
+        }
+        catch
+        {
+            NavigationManager.NavigateTo("");
+        }
 
+    }
+
+    // Game Lobby
+
+
+    // Game Functions
     public async void MakePlay(int locationNumber)
     {
         if (game.GameState.CurrentPlayer.Hand.Count <= selectedCard)
@@ -116,15 +145,4 @@
         gameMessage = $"Selected Card: {cardSlot}";
     }
 
-    protected override void OnInitialized()
-    {
-        try {
-            game = GameManager.Games[gameId];
-        }
-        catch
-        {
-            NavigationManager.NavigateTo("");
-        }
-
-    }
 }
