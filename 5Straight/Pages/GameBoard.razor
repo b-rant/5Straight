@@ -2,17 +2,53 @@
 
 @using _5Straight.Data
 @using _5Straight.Data.Models
+@implements IDisposable
 @inject GameManager GameManager
 @inject NavigationManager NavigationManager
 
 <h2>Game: @gameId</h2>
-<h3>Game Message: @gameMessage</h3>
+<h4>Game Message: @gameMessage</h4>
+<h4>@playerNumber</h4>
 
-
-@if (game == null || game.GameHasStarted)
+@if (game == null || !game.GameHasStarted)
 {
+    <h2>Select you player slot!</h2>
+    <p>Game will start when all players have selected a player slot</p>
     <div id="GameLobbyView">
+        <div class="container lobbyContainer">
+            <div class="row">
+                @foreach (var team in game.GameState.Teams)
+                {
+                    <div class="col-md-4">
+                        <h3>Team @(team.TeamNumber + 1)</h3>
+                        <div id="lobby-team-@team.TeamNumber" class="list-group ">
+                            @foreach (var player in team.Players)
+                            {
+                                if (string.IsNullOrWhiteSpace(player.PlayerOwner))
+                                {
+                                    <a @onclick="() => SelectPlayerSlot(player.PlayerNumber, authState.User.Identity.Name)" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">Empty Slot</h5>
+                                            <small>player @(player.PlayerNumber + 1)</small>
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a class="list-group-item list-group-item-action disabled @((!string.IsNullOrWhiteSpace(player.PlayerOwner) && player.PlayerOwner.Equals(authState.User.Identity.Name)) ? "lobby-owned" : "lobby-filled")" aria-disabled="true">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">@(player.PlayerOwner.Split('@')[0])</h5>
+                                            <small class="text-muted">player @(player.PlayerNumber + 1)</small>
+                                        </div>
+                                    </a>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
 
+        </div>
     </div>
 }
 else
@@ -30,11 +66,6 @@ else
                                 }
                             }
                         </ul>
-                    </div>
-                    <div id="optionsContainer">
-                        <div id="drawCardWrapper">
-                            <button type="button" class="btn btn-primary" @onclick="() => MakeDraw()">Draw Card</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -69,74 +100,129 @@ else
                 </div>
             </div>
         </div>
-
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <div id="cardContainer" align="center">
-                        @for (int i = 0; i < 4; i++)
-                        {
-                            @if (game.GameState.CurrentPlayer.Hand.Count >= i + 1)
+        @if (game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+        {
+            var player = game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="cardContainer" align="center">
+                            @for (int i = 0; i < 4; i++)
                             {
-                                int card = i;
-                                <button type="button" class="btn btn-outline-primary btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(game.GameState.CurrentPlayer.Hand[i])</button>
+                                @if (player.Hand.Count >= i + 1)
+                                {
+                                    int card = i;
+                                    <button type="button" class="btn btn-outline-primary btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(player.Hand[i])</button>
+                                }
                             }
-                        }
+                        </div>
                     </div>
+                    @if (player.Hand.Count <= 3)
+                    {
+                        <div id="optionsContainer">
+                            <div id="drawCardWrapper">
+                                <button type="button" class="btn btn-primary" @onclick="() => MakeDraw()">Draw Card</button>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
-        </div>
+        }
+        else
+        {
+            <h5> You are in Spectator Mode, you can watch the game but cannot play.</h5>
+        }
     </div>
 }
 
 
 @code {
-    [Parameter]
-    public string gameId { get; set; }
-    public Game game;
-    string gameMessage;
-    int selectedCard;
 
     // Init
-    protected override void OnInitialized()
+    protected async override void OnInitialized()
     {
         try
         {
+            authState = await authenticationStateTask;
             game = GameManager.Games[gameId];
+
+            GameManager.ConnectClientToGame(gameId, OnNotify);
         }
         catch
         {
             NavigationManager.NavigateTo("");
         }
+    }
+
+    public async Task OnNotify()
+    {
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    public void Dispose()
+    {
 
     }
 
     // Game Lobby
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private AuthenticationState authState;
+
+    public async void SelectPlayerSlot(int playerId, string userName)
+    {
+        if (GameManager.UserSelectPlayerSlot(gameId, playerId, userName))
+        {
+            playerNumber = playerId;
+        }
+    }
 
 
-    // Game Functions
+    // Game Board
+    [Parameter]
+    public string gameId { get; set; }
+    public Game game;
+    string gameMessage;
+    int selectedCard;
+    int playerNumber = -1;
+
     public async void MakePlay(int locationNumber)
     {
-        if (game.GameState.CurrentPlayer.Hand.Count <= selectedCard)
+        var player = game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+
+        if (player == null)
         {
-            gameMessage = "Select Valid Card first";
+            gameMessage = "You are not a player in this game.";
             return;
         }
 
-        bool result = game.PlayLocation(game.GameState.CurrentPlayer, locationNumber, game.GameState.CurrentPlayer.Hand[selectedCard]);
-        if (!result)
+        if (game.GameState.CurrentPlayer != player)
         {
-            gameMessage = "Failed to play";
+            gameMessage = "It is not your turn to play.";
+            return;
         }
+
+        if (player.Hand.Count <= selectedCard)
+        {
+            gameMessage = "Select a valid card before you play.";
+            return;
+        }
+
+        gameMessage = game.PlayLocation(game.GameState.CurrentPlayer, locationNumber, game.GameState.CurrentPlayer.Hand[selectedCard]);
+
     }
 
     public async void MakeDraw()
     {
-        bool result = game.PlayDrawCard(game.GameState.CurrentPlayer);
-        if (!result)
+        var player = game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+
+        if (player == null)
         {
-            gameMessage = "Failed to draw card";
+            gameMessage = "You are not a player in this game.";
+            return;
         }
+
+        gameMessage = game.PlayDrawCard(player);
     }
 
     public void SelectCard(int cardSlot)

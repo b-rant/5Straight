@@ -18,6 +18,12 @@ namespace _5Straight.Data
             Games = new Dictionary<string, Game>();
 
             GameTable = gameStateTable;
+
+            // TEMP GAME FOR TESTING!!
+            Game game = new Game("Test Game", GameStateFactory.BuildNewGameState(2, 1));
+            game.PartitionKey = $"{Games.Count + 1}";
+
+            Games.Add(game.PartitionKey, game);
         }
         public void ConnectClientToGame(string id, ClientCallback callback)
         {
@@ -45,6 +51,11 @@ namespace _5Straight.Data
         {
             return new List<Game>();
             // comes from Table Service
+        }
+
+        public bool UserSelectPlayerSlot(string gamePartitionKey, int playerNumber, string userName)
+        {
+            return Games[gamePartitionKey].OwnPlayerSlot(playerNumber, userName);
         }
     }
 }

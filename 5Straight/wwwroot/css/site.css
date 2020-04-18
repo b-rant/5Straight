@@ -198,6 +198,7 @@ app {
 /* Lobby CSS */
 
 #lobby-team-0 {
+   
 }
 
 #lobby-team-1 {
@@ -205,6 +206,14 @@ app {
 
 #lobby-team-2{
 
+}
+
+.lobby-owned {
+    background-color: lightblue;
+}
+
+lobby-filled {
+    background-color: lightgray;
 }
 
 /* Gameboard CSS*/
