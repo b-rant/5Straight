@@ -1,7 +1,10 @@
 ﻿using _5Straight.Data.Models;
 using _5Straight.Data.Proxies;
 using Microsoft.Azure.Cosmos.Table;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace _5Straight.Data
 {
@@ -9,11 +12,13 @@ namespace _5Straight.Data
     {
         public readonly GameState GameState;
         public readonly string GameName;
+        public readonly List<Delegate> Clients;
 
         public Game(string gameName, GameState initialState)
         {
             GameName = gameName;
             GameState = initialState;
+            Clients = new List<Delegate>();
         }
 
         // Public Functions
@@ -112,6 +117,15 @@ namespace _5Straight.Data
         {
             GameState.TurnNumber++;
             GameState.CurrentPlayer = GameState.Players[GameState.TurnNumber % GameState.Players.Count];
+            UpdateEveryone();
+        }
+
+        private async void UpdateEveryone()
+        {
+            foreach (Delegate d in Clients)
+            {
+                await Task.Run(() => d.DynamicInvoke());
+            }
         }
 
         private void FillLocation(Player player, int locationNumber)
