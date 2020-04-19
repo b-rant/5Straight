@@ -60,6 +60,11 @@ namespace _5Straight.Data
             return GameState.Players[playerNumber];
         }
 
+        public Play GetMostRecentPlay()
+        {
+            return GameState.Plays[GameState.TurnNumber - 1];
+        }
+
         public string PlayLocation(Player player, int location, int card)
         {
             if (!CanPlay(location, card, player))
@@ -96,7 +101,7 @@ namespace _5Straight.Data
             }
 
             NextTurn();
-            return $"Successfully played the {card} in the {location}!";
+            return "";
         }
 
         public string PlayDrawCard(Player player)
@@ -122,7 +127,7 @@ namespace _5Straight.Data
             CheckForAllDeadCards();
 
             NextTurn();
-            return $"Successfully drew the {cardDrew}!";
+            return "";
         }
 
 

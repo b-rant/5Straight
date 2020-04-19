@@ -209,20 +209,16 @@ app {
 }
 
 .lobby-owned {
-    background-color: lightblue;
+    background-color: lightblue !important;
 }
 
-lobby-filled {
-    background-color: lightgray;
+.lobby-filled {
+    background-color: lightgray !important;
 }
 
 /* Gameboard CSS*/
 #boardContainer {
     padding: 1%;
-}
-
-#board {
-    width: 454px;
 }
 
 #board table, #board td {
@@ -234,10 +230,23 @@ lobby-filled {
 }
 
 #board td {
-    width: 45px;
-    height: 45px;
+    width: 2em;
+    height: 2em;
     text-align: center;
-    font-size: 15;
+    font-size: 2em;
+}
+
+@media (max-width: 1000px) {
+    #board table, #board td {
+        border: 2px solid #545454;
+    }
+
+    #board td {
+        width: 2em;
+        height: 2em;
+        text-align: center;
+        font-size: 1em;
+    }
 }
 
 #board td:hover {
@@ -246,7 +255,6 @@ lobby-filled {
 }
 
 .teamColor0 {
-    outline: 5px solid #d9534f;
     outline: 5px solid var(--team0-color);
     outline-offset: -8px;
 }

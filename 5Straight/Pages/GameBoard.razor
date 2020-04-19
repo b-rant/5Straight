@@ -1,14 +1,11 @@
 ﻿@page "/GameBoard/{gameId}"
 
 @using _5Straight.Data
-@using _5Straight.Data.Models
 @implements IDisposable
 @inject GameManager GameManager
 @inject NavigationManager NavigationManager
+@inject IToastService toastService
 
-<h2>Game: @gameId</h2>
-<h4>Game Message: @gameMessage</h4>
-<h4>@playerNumber</h4>
 
 @if (game == null || !game.GameHasStarted)
 {
@@ -62,7 +59,7 @@ else
                             @{
                                 foreach (var player in game.GameState.Players)
                                 {
-                                    <li role="presentation" class="nav-item"><a class="nav-link @(game.GameState.CurrentPlayer.Equals(player) ? "active" : "")">Player @(player.PlayerNumber + 1)</a></li>
+                                    <li role="presentation" class="nav-item"><a class="nav-link @(game.GameState.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
                                 }
                             }
                         </ul>
@@ -115,16 +112,13 @@ else
                                     <button type="button" class="btn btn-outline-primary btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(player.Hand[i])</button>
                                 }
                             }
+                            @if (player.Hand.Count <= 3)
+                            {
+                                <button type="button" class="btn btn-outline-success btn-lg" @onclick="() => MakeDraw()">Draw Card</button>
+                            }
                         </div>
                     </div>
-                    @if (player.Hand.Count <= 3)
-                    {
-                        <div id="optionsContainer">
-                            <div id="drawCardWrapper">
-                                <button type="button" class="btn btn-primary" @onclick="() => MakeDraw()">Draw Card</button>
-                            </div>
-                        </div>
-                    }
+                    
                 </div>
             </div>
         }
@@ -156,7 +150,42 @@ else
 
     public async Task OnNotify()
     {
+        var player = game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
         await InvokeAsync(() => StateHasChanged());
+        var latestPlay = game.GetMostRecentPlay();
+        if (game.GameState.Won)
+        {
+            if (player.Team.TeamNumber.Equals(game.GameState.WinningPlayer.Team.TeamNumber))
+            {
+                toastService.ShowSuccess("Congrats! You Won!!", "GAME OVER!");
+            }
+            else
+            {
+                toastService.ShowWarning($"Team {game.GameState.WinningPlayer.Team.TeamNumber + 1} won the game!", "GAME OVER!");
+            }
+        }
+        else if (latestPlay.PlayerNumber.Equals(player.PlayerNumber))
+        {
+            if (latestPlay.Draw)
+            {
+                toastService.ShowSuccess($"You drew the {latestPlay.CardNumber} card", "Draw");
+            }
+            else
+            {
+                toastService.ShowSuccess($"You played the {latestPlay.CardNumber} in the {latestPlay.PlayedLocationNumber}", "Play");
+            }
+        }
+        else
+        {
+            if (latestPlay.Draw)
+            {
+                toastService.ShowInfo($"{game.GameState.Players[latestPlay.PlayerNumber].PlayerOwner.Split('@')[0]} drew a card", "Draw");
+            }
+            else
+            {
+                toastService.ShowInfo($"{game.GameState.Players[latestPlay.PlayerNumber].PlayerOwner.Split('@')[0]} played the {latestPlay.CardNumber} in the {latestPlay.PlayedLocationNumber}", "Play");
+            }
+        }
     }
 
     public void Dispose()
@@ -182,7 +211,6 @@ else
     [Parameter]
     public string gameId { get; set; }
     public Game game;
-    string gameMessage;
     int selectedCard;
     int playerNumber = -1;
 
@@ -192,23 +220,27 @@ else
 
         if (player == null)
         {
-            gameMessage = "You are not a player in this game.";
+            toastService.ShowError("You are not a player in this game.", "Error");
             return;
         }
 
         if (game.GameState.CurrentPlayer != player)
         {
-            gameMessage = "It is not your turn to play.";
+            toastService.ShowError("It is not your turn to play.", "Error");
             return;
         }
 
         if (player.Hand.Count <= selectedCard)
         {
-            gameMessage = "Select a valid card before you play.";
+            toastService.ShowError("Select a valid card before you play.", "Error");
             return;
         }
 
-        gameMessage = game.PlayLocation(game.GameState.CurrentPlayer, locationNumber, game.GameState.CurrentPlayer.Hand[selectedCard]);
+        var response = game.PlayLocation(game.GameState.CurrentPlayer, locationNumber, game.GameState.CurrentPlayer.Hand[selectedCard]);
+        if (!string.IsNullOrWhiteSpace(response))
+        {
+            toastService.ShowError(response, "");
+        }
 
     }
 
@@ -218,17 +250,20 @@ else
 
         if (player == null)
         {
-            gameMessage = "You are not a player in this game.";
+            toastService.ShowError("You are not a player in this game.", "Error");
             return;
         }
 
-        gameMessage = game.PlayDrawCard(player);
+        var response = game.PlayDrawCard(player);
+        if (!string.IsNullOrWhiteSpace(response))
+        {
+            toastService.ShowError(response, "Error");
+        }
     }
 
     public void SelectCard(int cardSlot)
     {
         selectedCard = cardSlot;
-        gameMessage = $"Selected Card: {cardSlot}";
     }
 
 }
