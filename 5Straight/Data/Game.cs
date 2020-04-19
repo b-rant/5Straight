@@ -25,7 +25,24 @@ namespace _5Straight.Data
 
         // Public Functions
 
-        public bool ValidateAndStartGame()
+        public bool OwnPlayerSlot(int playerNumber, string userName)
+        {
+            var playerToOwn = GameState.Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
+            if (string.IsNullOrWhiteSpace(playerToOwn.PlayerOwner))
+            {
+                foreach (var player in GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(userName)))
+                {
+                    player.PlayerOwner = "";
+                }
+                playerToOwn.PlayerOwner = userName;
+                ValidateAndStartGame();
+                UpdateEveryone();
+                return true;
+            }
+            return false;
+        }
+
+        private bool ValidateAndStartGame()
         {
             if (GameState.Players.Where(x => string.IsNullOrWhiteSpace(x.PlayerOwner)).Any())
             {
@@ -43,11 +60,16 @@ namespace _5Straight.Data
             return GameState.Players[playerNumber];
         }
 
-        public bool PlayLocation(Player player, int location, int card)
+        public Play GetMostRecentPlay()
+        {
+            return GameState.Plays[GameState.TurnNumber - 1];
+        }
+
+        public string PlayLocation(Player player, int location, int card)
         {
             if (!CanPlay(location, card, player))
             {
-                return false;
+                return CantPlayMessage(location, card, player);
             }
 
             RemoveCardFromHand(player, card);
@@ -79,14 +101,14 @@ namespace _5Straight.Data
             }
 
             NextTurn();
-            return true;
+            return "";
         }
 
-        public bool PlayDrawCard(Player player)
+        public string PlayDrawCard(Player player)
         {
             if (!CanDraw(player))
             {
-                return false;
+                return CantDrawMessage(player);
             }
 
             var cardDrew = DrawCard();
@@ -105,7 +127,7 @@ namespace _5Straight.Data
             CheckForAllDeadCards();
 
             NextTurn();
-            return true;
+            return "";
         }
 
 
@@ -195,6 +217,35 @@ namespace _5Straight.Data
             return false;
         }
 
+        private string CantPlayMessage(int location, int card, Player player)
+        {
+            if (GameState.Won)
+            {
+                return "Failed to Play: Game is already over!";
+            }
+            if (location < 0 || location > 99)
+            {
+                return "Failed to Play: Location does not exist on the board.";
+            }
+            if (location < card)
+            {
+                return $"Failed to Play: Cannot play {card} in the {location}, location number is lower than card number.";
+            }
+            if (GameState.Board[location].Filled)
+            {
+                return $"Failed to Play: Cannot play in {location}, it is already owned by another team.";
+            }
+            if (!player.Hand.Contains(card))
+            {
+                return $"Failed to Play: You do not have the {card} card in your hand.";
+            }
+            if (!GameState.CurrentPlayer.Equals(player))
+            {
+                return "Failed to Play: It is not your turn to play.";
+            }
+            return "Failed to Play: ERROR unknown failure reason...";
+        }
+
         private bool CanDraw(Player player)
         {
             if (!GameState.Won 
@@ -204,6 +255,23 @@ namespace _5Straight.Data
                 return true;
             }
             return false;
+        }
+
+        private string CantDrawMessage(Player player)
+        {
+            if (GameState.Won)
+            {
+                return "Failed to Draw: Game is already over!";
+            }
+            if (player.Hand.Count >= 4)
+            {
+                return "Failed to Draw: You cannot draw with a full hand.";
+            }
+            if (!GameState.CurrentPlayer.Equals(player))
+            {
+                return "Failed to Draw: It is not your turn to play.";
+            }
+            return "Failed to Draw: ERROR unknown failure reason...";
         }
 
         private void DetermineHighestPlayable()
