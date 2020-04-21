@@ -1,4 +1,5 @@
-﻿using _5Straight.Data.Models;
+﻿using _5Straight.Data.GameAI;
+using _5Straight.Data.Models;
 using _5Straight.Data.Proxies;
 using Microsoft.Azure.Cosmos.Table;
 using System;
@@ -42,16 +43,15 @@ namespace _5Straight.Data
             return false;
         }
 
-        private bool ValidateAndStartGame()
+        public void OwnPlayerSlotForAi(int playerNumber)
         {
-            if (GameState.Players.Where(x => string.IsNullOrWhiteSpace(x.PlayerOwner)).Any())
+            var playerToOwn = GameState.Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
+            if (string.IsNullOrWhiteSpace(playerToOwn.PlayerOwner))
             {
-                return false;
-            }
-            else
-            {
-                GameHasStarted = true;
-                return true;
+                playerToOwn.PlayerOwner = "AI Player";
+                playerToOwn.Npc = AiPlayerFactory.BuildAi(playerToOwn, this);
+                ValidateAndStartGame();
+                UpdateEveryone();
             }
         }
 
@@ -133,6 +133,37 @@ namespace _5Straight.Data
 
         // Private Functions
 
+        private void RunAI()
+        {
+            if (GameState.CurrentPlayer.Npc != null)
+            {
+                var play = GameState.CurrentPlayer.Npc.DeterminePlay();
+
+                if (play.Draw)
+                {
+                    PlayDrawCard(GameState.CurrentPlayer);
+                }
+                else
+                {
+                    PlayLocation(GameState.CurrentPlayer, play.PlayedLocationNumber, play.CardNumber);
+                }
+            }
+        }
+
+        private bool ValidateAndStartGame()
+        {
+            if (GameState.Players.Where(x => string.IsNullOrWhiteSpace(x.PlayerOwner)).Any())
+            {
+                return false;
+            }
+            else
+            {
+                GameHasStarted = true;
+                RunAI();
+                return true;
+            }
+        }
+
         private int DrawCard()
         {
             var card = GameState.Deck[0];
@@ -155,6 +186,7 @@ namespace _5Straight.Data
             GameState.TurnNumber++;
             GameState.CurrentPlayer = GameState.Players[GameState.TurnNumber % GameState.Players.Count];
             UpdateEveryone();
+            RunAI();
         }
 
         private async void UpdateEveryone()

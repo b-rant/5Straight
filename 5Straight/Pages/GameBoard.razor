@@ -29,6 +29,10 @@
                                             <small>player @(player.PlayerNumber + 1)</small>
                                         </div>
                                     </a>
+                                    if (game.GameState.Teams.Count == 2)
+                                    {
+                                        <button @onclick="() => SetPlayerAsAi(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Make AI</button>
+                                    }
                                 }
                                 else
                                 {
@@ -133,6 +137,10 @@ else
 @code {
 
     // Init
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private AuthenticationState authState;
+
     protected async override void OnInitialized()
     {
         try
@@ -194,9 +202,6 @@ else
     }
 
     // Game Lobby
-    [CascadingParameter]
-    private Task<AuthenticationState> authenticationStateTask { get; set; }
-    private AuthenticationState authState;
 
     public async void SelectPlayerSlot(int playerId, string userName)
     {
@@ -206,6 +211,10 @@ else
         }
     }
 
+    public async void SetPlayerAsAi(int playerId)
+    {
+        GameManager.AiSelectPlayerSlot(gameId, playerId);
+    }
 
     // Game Board
     [Parameter]
@@ -216,7 +225,7 @@ else
 
     public async void MakePlay(int locationNumber)
     {
-        var player = game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+        var player = game.GameState?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).FirstOrDefault();
 
         if (player == null)
         {
@@ -246,7 +255,7 @@ else
 
     public async void MakeDraw()
     {
-        var player = game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+        var player = game.GameState?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).FirstOrDefault();
 
         if (player == null)
         {

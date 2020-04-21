@@ -24,25 +24,44 @@
             </NavLink>
         </li>
         <li>
+            <h4 class="five-nav-headers">Your Live Games</h4>
+        </li>
+        @{
+            foreach (var game in GameManager.Games)
+            {
+                if (game.Value.GameHasStarted && !game.Value.GameState.Won && game.Value.GameState.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" @onclick="() => DirectToGame(game.Value.PartitionKey)">
+                            <span class="oi oi-list-rich" aria-hidden="true"></span> @game.Value.GameName
+                        </NavLink>
+                    </li>
+                }
+            }
+        }
+        <li>
             <h4 class="five-nav-headers">Open Games</h4>
         </li>
         @{
             foreach (var game in GameManager.Games)
             {
-                <li class="nav-item px-3">
-                    <NavLink class="nav-link" @onclick="() => DirectToGame(game.Value.PartitionKey)">
-                        <span class="oi oi-list-rich" aria-hidden="true"></span> @game.Value.GameName
-                    </NavLink>
-                </li>
+                if (!game.Value.GameHasStarted)
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" @onclick="() => DirectToGame(game.Value.PartitionKey)">
+                            <span class="oi oi-list-rich" aria-hidden="true"></span> @game.Value.GameName
+                        </NavLink>
+                    </li>
+                }
             }
         }
-        <li>
-            <h4 class="five-nav-headers">Your Live Games</h4>
-        </li>
     </ul>
 </div>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private AuthenticationState authState;
     private bool collapseNavMenu = true;
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
@@ -56,7 +75,7 @@
 
     public void DirectToGame(string gameId)
     {
-        NavigationManager.NavigateTo($"GameBoard/{gameId}");
+        NavigationManager.NavigateTo($"GameBoard/{gameId}", true);
     }
 
     void ShowNewGameModal()
@@ -64,15 +83,15 @@
         var options = new ModalOptions()
         {
             DisableBackgroundCancel = true,
-            
+
         };
 
         Modal.Show<NewGame>("Create New Game", options);
     }
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
-
+        authState = await authenticationStateTask;
 
     }
 }

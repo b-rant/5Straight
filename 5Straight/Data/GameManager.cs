@@ -57,5 +57,10 @@ namespace _5Straight.Data
         {
             return Games[gamePartitionKey].OwnPlayerSlot(playerNumber, userName);
         }
+
+        public void AiSelectPlayerSlot(string gamePartitionKey, int playerNumber)
+        {
+            Games[gamePartitionKey].OwnPlayerSlotForAi(playerNumber);
+        }
     }
 }
