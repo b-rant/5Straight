@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using _5Straight.Data.GameAI;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace _5Straight.Data.Models
@@ -18,6 +19,8 @@ namespace _5Straight.Data.Models
         public Team Team { get; set; }
 
         public string PlayerOwner { get; set; }
+
+        public AiPlayer Npc { get; set; }
 
     }
 }
