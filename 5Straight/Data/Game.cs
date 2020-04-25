@@ -60,9 +60,9 @@ namespace _5Straight.Data
             return GameState.Players[playerNumber];
         }
 
-        public Play GetMostRecentPlay()
+        public List<Play> GetMostRecentPlays(int turnNumber)
         {
-            return GameState.Plays[GameState.TurnNumber - 1];
+            return GameState.Plays.Where(x => x.TurnNumber >= turnNumber).ToList();
         }
 
         public string PlayLocation(Player player, int location, int card)
@@ -185,8 +185,8 @@ namespace _5Straight.Data
         {
             GameState.TurnNumber++;
             GameState.CurrentPlayer = GameState.Players[GameState.TurnNumber % GameState.Players.Count];
-            UpdateEveryone();
             RunAI();
+            UpdateEveryone();
         }
 
         private async void UpdateEveryone()

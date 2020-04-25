@@ -269,6 +269,9 @@ app {
     outline-offset: -8px;
 }
 
+/* Game Info CSS */
+
+
 /* This centers the tabs for which player is active */
 .playerContainer .nav-center {
     text-align: center;
