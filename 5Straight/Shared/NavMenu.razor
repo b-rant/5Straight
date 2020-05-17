@@ -30,7 +30,7 @@
         @{
             foreach (var game in GameManager.Games)
             {
-                if (game.Value.GameHasStarted && !game.Value.GameState.Won && game.Value.GameState.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+                if (game.Value.GameHasStarted && !game.Value.Won && game.Value.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
                 {
                     <li class="nav-item px-3">
                         <NavLink class="nav-link" @onclick="() => DirectToGame(game.Value.PartitionKey)">

@@ -10,18 +10,18 @@ namespace _5Straight.Data
     public class GameManager
     {
         public Dictionary<string, Game> Games;
-        public GameStateTable GameTable;
+        public GameTable GameTable;
         public delegate Task ClientCallback();
         public readonly List<Delegate> Clients;
 
-        public GameManager(GameStateTable gameStateTable)
+        public GameManager(GameTable gameStateTable)
         {
             Clients = new List<Delegate>();
             Games = new Dictionary<string, Game>();
             GameTable = gameStateTable;
 
             // TEMP GAME FOR TESTING!!
-            Game game = new Game("Test Game", GameStateFactory.BuildNewGameState(2, 1));
+            Game game = GameFactory.BuildNewGame("Test Game", 2, 1);
             game.PartitionKey = $"{Games.Count + 1}";
 
             Games.Add(game.PartitionKey, game);
@@ -48,8 +48,8 @@ namespace _5Straight.Data
         public Game CreateNewGame(string gameName, int numTeams, int numPlayersPerTeam)
         {
             //Game game = GameTable.InsertGame(new Game(gameName, GameStateFactory.BuildNewGameState(numTeams, numPlayersPerTeam)));
-            Game game = new Game(gameName, GameStateFactory.BuildNewGameState(numTeams, numPlayersPerTeam));
-            game.PartitionKey = $"{Games.Count + 1}";
+            Game game = GameFactory.BuildNewGame(gameName, numTeams, numPlayersPerTeam);
+            //game.PartitionKey = $"{Games.Count + 1}";
 
             Games.Add(game.PartitionKey, game);
 

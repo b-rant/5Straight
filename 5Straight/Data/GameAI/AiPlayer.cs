@@ -39,7 +39,7 @@ namespace _5Straight.Data.GameAI
             // Determine the lowest playable card
             var sortedCards = Player.Hand.OrderBy(x => x);
 
-            List<BoardLocation> playableLocations = Game.GameState.Board.Where(x => !x.Filled && x.Number >= sortedCards.FirstOrDefault()).ToList();
+            List<BoardLocation> playableLocations = Game.Board.Where(x => !x.Filled && x.Number >= sortedCards.FirstOrDefault()).ToList();
 
             // If there are no playable locations and the hand is full, something is wrong...
             if (!playableLocations.Any() && Player.Hand.Count == 4)
@@ -51,7 +51,7 @@ namespace _5Straight.Data.GameAI
             Dictionary<int, double> boardValueResults = new Dictionary<int, double>();
             foreach (var loc in playableLocations)
             {
-                boardValueResults.Add(loc.Number, LocationValuator.CalculateLocationValue(Game.GameState.Board, loc.Number, Player.PlayerNumber));
+                boardValueResults.Add(loc.Number, LocationValuator.CalculateLocationValue(Game.Board, loc.Number, Player.PlayerNumber));
             }
 
             // Determine Best Play with the PlayValuator

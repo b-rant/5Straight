@@ -14,7 +14,7 @@
     <div id="GameLobbyView">
         <div class="container lobbyContainer">
             <div class="row">
-                @foreach (var team in game.GameState.Teams)
+                @foreach (var team in game.Teams)
                 {
                     <div class="col-md-4">
                         <h3>Team @(team.TeamNumber + 1)</h3>
@@ -29,7 +29,7 @@
                                             <small>player @(player.PlayerNumber + 1)</small>
                                         </div>
                                     </a>
-                                    if (game.GameState.Teams.Count == 2)
+                                    if (game.Teams.Count == 2)
                                     {
                                         <button @onclick="() => SetPlayerAsAi(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Make AI</button>
                                     }
@@ -73,10 +73,10 @@ else
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (int i = game.GameState.Plays.Count - 1; i >= 0; i--)
+                                @for (int i = game.Plays.Count - 1; i >= 0; i--)
                                 {
-                                    var play = game.GameState.Plays[i];
-                                    var player = game.GameState.Players.Where(p => p.PlayerNumber.Equals(play.PlayerNumber)).FirstOrDefault();
+                                    var play = game.Plays[i];
+                                    var player = game.Players.Where(p => p.PlayerNumber.Equals(play.PlayerNumber)).FirstOrDefault();
                                     <tr>
                                         <td>@play.TurnNumber</td>
                                         <td>@player.PlayerOwner.Split('@')[0]</td>
@@ -110,9 +110,9 @@ else
                         <div class="nav-center">
                             <ul id="playerTabs" class="nav nav-pills" role="tablist">
                                 @{
-                                    foreach (var player in game.GameState.Players)
+                                    foreach (var player in game.Players)
                                     {
-                                        <li role="presentation" class="nav-item"><a class="nav-link @(game.GameState.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                        <li role="presentation" class="nav-item"><a class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
                                     }
                                 }
                             </ul>
@@ -134,11 +134,11 @@ else
                                             @{
                                                 for (int j = 0; j < 10; j++)
                                                 {
-                                                    int locationNumber = GameStateFactory.positionOrder[position];
+                                                    int locationNumber = GameFactory.positionOrder[position];
 
                                                     string classString = "";
 
-                                                    <td class="@(game.GameState.Board.Where(x => x.Number.Equals(locationNumber)).FirstOrDefault().FilledBy?.Team?.TeamColor ?? classString)" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
+                                                    <td class="@(game.Board.Where(x => x.Number.Equals(locationNumber)).FirstOrDefault().FilledBy?.Team?.TeamColor ?? classString)" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
                                                     position++;
                                                 }
                                             }
@@ -150,9 +150,9 @@ else
                     </div>
                 </div>
             </div>
-            @if (game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+            @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
             {
-                var player = game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+                var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
                 <div class="container">
                     <div class="row">
                         <div class="col-md-12">
@@ -197,7 +197,7 @@ else
         {
             authState = await authenticationStateTask;
             game = GameManager.Games[gameId];
-            mostRecentShowedPlay = game.GameState.TurnNumber;
+            mostRecentShowedPlay = game.TurnNumber;
 
             GameManager.ConnectClientToGame(gameId, OnNotify);
         }
@@ -209,20 +209,20 @@ else
 
     public async Task OnNotify()
     {
-        var player = game.GameState.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+        var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
         await InvokeAsync(() => StateHasChanged());
         var latestPlays = game.GetMostRecentPlays(mostRecentShowedPlay);
         foreach (var play in latestPlays)
         {
-            if (game.GameState.Won)
+            if (game.Won)
             {
-                if (player.Team.TeamNumber.Equals(game.GameState.WinningPlayer.Team.TeamNumber))
+                if (player.Team.TeamNumber.Equals(game.WinningPlayer.Team.TeamNumber))
                 {
                     toastService.ShowSuccess("Congrats! You Won!!", "GAME OVER!");
                 }
                 else
                 {
-                    toastService.ShowWarning($"Team {game.GameState.WinningPlayer.Team.TeamNumber + 1} won the game!", "GAME OVER!");
+                    toastService.ShowWarning($"Team {game.WinningPlayer.Team.TeamNumber + 1} won the game!", "GAME OVER!");
                 }
             }
             else if (play.PlayerNumber.Equals(player.PlayerNumber))
@@ -240,11 +240,11 @@ else
             {
                 if (play.Draw)
                 {
-                    toastService.ShowInfo($"{game.GameState.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} drew a card", "Draw");
+                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} drew a card", "Draw");
                 }
                 else
                 {
-                    toastService.ShowInfo($"{game.GameState.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} played the {play.CardNumber} in the {play.PlayedLocationNumber}", "Play");
+                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} played the {play.CardNumber} in the {play.PlayedLocationNumber}", "Play");
                 }
             }
             mostRecentShowedPlay++;
@@ -282,7 +282,7 @@ else
 
     public async void MakePlay(int locationNumber)
     {
-        var player = game.GameState?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).FirstOrDefault();
+        var player = game?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).FirstOrDefault();
 
         if (player == null)
         {
@@ -290,7 +290,7 @@ else
             return;
         }
 
-        if (game.GameState.CurrentPlayer != player)
+        if (game.CurrentPlayer != player)
         {
             toastService.ShowError("It is not your turn to play.", "Error");
             return;
@@ -302,7 +302,7 @@ else
             return;
         }
 
-        var response = game.PlayLocation(game.GameState.CurrentPlayer, locationNumber, game.GameState.CurrentPlayer.Hand[selectedCard]);
+        var response = game.PlayLocation(game.CurrentPlayer, locationNumber, game.CurrentPlayer.Hand[selectedCard]);
         if (!string.IsNullOrWhiteSpace(response))
         {
             toastService.ShowError(response, "");
@@ -312,7 +312,7 @@ else
 
     public async void MakeDraw()
     {
-        var player = game.GameState?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).FirstOrDefault();
+        var player = game?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).FirstOrDefault();
 
         if (player == null)
         {
