@@ -4,22 +4,23 @@ using System.Collections.Generic;
 
 namespace _5Straight.Data
 {
-    public static class GameStateFactory
+    public static class GameFactory
     {
         public static readonly int[] positionOrder = new int[] {73, 72, 71, 70, 69, 68, 67, 66, 65, 0, 74, 57, 58, 59, 60, 61, 62, 63, 64, 99, 75, 56, 21, 20, 19, 18, 17, 36, 37, 98,
                             76, 55, 22, 13, 14, 15, 16, 35, 38, 97, 77, 54, 23, 12, 1, 4, 5, 34, 39, 96, 78, 53, 24, 11, 2, 3, 6, 33, 40, 95, 79, 52, 25, 10, 9, 8, 7, 32, 41, 94,
                             80, 51, 26, 27, 28, 29, 30, 31, 42, 93, 81, 50, 49, 48, 47, 46, 45, 44, 43, 92, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91 };
 
 
-        public static GameState BuildNewGameState(int numberOfTeams, int numberOfPlayersOnEachTeam)
+        public static Game BuildNewGame(string gameName, int numberOfTeams, int numberOfPlayersOnEachTeam)
         {
+            var partitionKey = Guid.NewGuid();
             var board = BuildNewBoard();
             var players = BuildPlayers(numberOfPlayersOnEachTeam * numberOfTeams);
             var teams = BuildTeams(numberOfTeams, players);
             var deck = BuildDeck();
             DealCards(players, deck);
 
-            return new GameState(board, deck, teams, players);
+            return new Game(partitionKey, gameName, board, deck, teams, players);
         }
 
         private static void DealCards(List<Player> players, List<int> deck)

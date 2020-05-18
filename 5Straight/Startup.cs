@@ -47,7 +47,7 @@ namespace _5Straight
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSingleton<TableService>();
-            services.AddSingleton<GameStateTable>();
+            services.AddSingleton<GameTable>();
             services.AddSingleton<GameManager>();
             services.AddBlazoredModal();
             services.AddBlazoredToast();

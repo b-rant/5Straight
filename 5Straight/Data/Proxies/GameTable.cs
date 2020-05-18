@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 
 namespace _5Straight.Data.Proxies
 {
-    public class GameStateTable
+    public class GameTable
     {
         private TableService tableService;
-        private string tableName = "GameStates";
+        private string tableName = "Games";
 
-        public GameStateTable(TableService tableService)
+        public GameTable(TableService tableService)
         {
             this.tableService = tableService;
         }
 
         #region InsertOrUpdate methods
-        public Game InsertGame(Game game)
+        public void SaveGame(Game game)
         {
             if (game is null)
             {
@@ -31,9 +31,22 @@ namespace _5Straight.Data.Proxies
 
                 TableResult response = tableService.Execute(insertOrMergeOperation, tableName);
 
-                InsertGameState(game.GameState);
+                //Board
 
-                return response.Result as Game;
+                //Deck
+
+                //Plays
+
+                //Teams
+
+                //Players
+
+                //CurrentPlayer
+
+                //WinningPlayer
+                //save all the complex properties to their own tables:
+                //save list of plays
+                //save list of 
             }
             catch (StorageException e)
             {
@@ -41,7 +54,7 @@ namespace _5Straight.Data.Proxies
             }
         }
 
-        public async void InsertGameState(GameState gameState)
+        public async void Insert(Game gameState)
         {
             if (gameState is null)
             {
