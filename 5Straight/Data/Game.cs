@@ -14,9 +14,11 @@ namespace _5Straight.Data
     {
         public readonly List<Delegate> Clients;
 
-        public string GameName { get; set; }
+        public string GameId => PartitionKey;
 
         public bool GameHasStarted { get; set; }
+
+        public string GameName { get; set; }
 
         public bool Won { get; set; }
 
@@ -57,9 +59,9 @@ namespace _5Straight.Data
             Clients = new List<Delegate>();
         }
 
-        public Game(Guid partitionKey, string gameName, List<BoardLocation> board, List<int> deck, List<Team> teams, List<Player> players)
+        public Game(string partitionKey, string gameName, List<BoardLocation> board, List<int> deck, List<Team> teams, List<Player> players)
         {
-            PartitionKey = partitionKey.ToString();
+            PartitionKey = partitionKey;
             RowKey = "Game";
             GameName = gameName;
             Board = board;

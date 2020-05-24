@@ -1,22 +1,19 @@
-﻿@page "/"
+﻿@page "/GameHistory"
+
 @using _5Straight.Data
 @using Blazorise
 @using Blazorise.DataGrid
 @implements IDisposable
-@inject IModalService Modal
 @inject NavigationManager NavigationManager
 @inject GameManager GameManager
 
 <Row>
     <Column>
-        <DisplayHeading Size="DisplayHeadingSize.Is3">5ive Straight</DisplayHeading>
         <Card Margin="Margin.Is4.OnY">
             <CardHeader>
-                <CardTitle>Open Games</CardTitle>
+                <CardTitle>Finished Games</CardTitle>
             </CardHeader>
             <CardBody>
-                <CardText Margin="Margin.Is3">Create a new game or join an open game! <Button class="btn btn-primary" Clicked="ShowNewGameModal">Create New Game</Button></CardText>
-
                 <DataGrid TItem="Game" Data="@FilteredGames" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="true" Bordered="true">
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameId)" Caption="Game ID" Editable="false"></DataGridColumn>
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameName)" Caption="Game Name" Editable="false"></DataGridColumn>
@@ -32,24 +29,32 @@
                         <DisplayTemplate>
                             @{
                                 var players = (context as Game)?.Players;
-                                var openPlayers = (context as Game)?.Players.Where(x => x.PlayerOwner.Equals(""));
-                                @($"{players.Count()-openPlayers.Count()}/{players.Count()} Filled")
+                                @($"{players.Count()}")
                             }
                         </DisplayTemplate>
                     </DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Join Game" Editable="false" Sortable="false" Filterable="false">
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.TurnNumber)" Caption="Turns" Editable="false" Sortable="false" Filterable="false"></DataGridColumn>
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.WinningPlayer)" Caption="Winning Player" Editable="false" Sortable="false" Filterable="false">
+                        <DisplayTemplate>
+                            @{
+                                var player = (context as Game)?.WinningPlayer;
+                                @($"{player.PlayerOwner}")
+                            }
+                        </DisplayTemplate>
+                    </DataGridColumn>
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.WinningPlayer)" Caption="Winning Team" Editable="false" Sortable="false" Filterable="false">
+                        <DisplayTemplate>
+                            @{
+                                var player = (context as Game)?.WinningPlayer;
+                                @($"{player.Team.TeamNumber}")
+                            }
+                        </DisplayTemplate>
+                    </DataGridColumn>
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="View Game" Editable="false" Sortable="false" Filterable="false">
                         <DisplayTemplate>
                             @{
                                 var game = (context as Game);
-                                var openPlayers = game?.Players.Where(x => x.PlayerOwner.Equals(""));
-                                if (openPlayers.Any())
-                                {
-                                    <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">Join</Button>
-                                }
-                                else
-                                {
-                                    <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">Watch</Button>
-                                }
+                                <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">View</Button>
                             }
                         </DisplayTemplate>
                     </DataGridColumn>
@@ -74,7 +79,7 @@
         authState = await authenticationStateTask;
         GameManager.ConnectClientToGameManager(OnNotify);
         Games = GameManager.Games;
-        FilteredGames = Games.Values.Where(x => !x.Won).ToList();
+        FilteredGames = Games.Values.Where(x => x.Won).ToList();
     }
 
     public async Task OnNotify()
@@ -83,15 +88,6 @@
         await InvokeAsync(() => StateHasChanged());
     }
 
-    void ShowNewGameModal()
-    {
-        var options = new ModalOptions()
-        {
-            DisableBackgroundCancel = true
-        };
-
-        Modal.Show<NewGame>("Create New Game", options);
-    }
 
     public void DirectToGame(string gameId)
     {
@@ -104,5 +100,3 @@
     }
 
 }
-
-

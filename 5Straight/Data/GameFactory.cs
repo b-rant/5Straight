@@ -1,6 +1,7 @@
 ﻿using _5Straight.Data.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace _5Straight.Data
 {
@@ -13,7 +14,7 @@ namespace _5Straight.Data
 
         public static Game BuildNewGame(string gameName, int numberOfTeams, int numberOfPlayersOnEachTeam)
         {
-            var partitionKey = Guid.NewGuid();
+            var partitionKey = GenerateGameId();
             var board = BuildNewBoard();
             var players = BuildPlayers(numberOfPlayersOnEachTeam * numberOfTeams);
             var teams = BuildTeams(numberOfTeams, players);
@@ -99,6 +100,19 @@ namespace _5Straight.Data
                 deck[j] = temp;
             }
             return deck;
+        }
+
+        private static string GenerateGameId()
+        {
+            return $"{DateTime.Now:MMddyyHmmss}{RandomString(4)}";
+        }
+
+        private static string RandomString(int length)
+        {
+            Random random = new Random();
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
         private static List<BoardLocation> BuildNewBoard()
