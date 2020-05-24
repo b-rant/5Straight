@@ -3,37 +3,60 @@
 @inject IModalService ModalService
 
 
-<div class="simple-form">
-    <div class="form-group">
-        <label for="game-name">Game Name</label>
-        <input @bind="GameName" type="text" class="form-control" id="game-name" placeholder="Enter a name for the Game" />
-    </div>
-    <div class="form-group">
-        <label for="numberOfTeams">Number of Teams</label>
-        <select @bind="NumberOfTeams" class="form-control" id="numberOfTeams">
-            <option selected>2</option>
-            <option>3</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label for="numberOfPlayers">Number of Players on each Team</label>
-        <select @bind="NumberOfPlayersOnEachTeam" class="form-control" id="numberOfPlayers">
-            <option selected>1</option>
-            <option>2</option>
-            <option>3</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label for="totalPlayers">Total number of players in game</label>
-        <input id="totalPlayers" class="form-control" type="text" placeholder="@TotalNumberOfPlayers" readonly>
-    </div>
-
-    <button @onclick="SubmitForm" class="btn btn-primary">Submit</button>
-
-</div>
-
+<Validations @ref="GameValidations" Mode="ValidationMode.Manual">
+    <Validation Validator="@ValidationRule.IsNotEmpty">
+        <Field Horizontal="true">
+            <FieldLabel ColumnSize="ColumnSize.Is4">Game Name</FieldLabel>
+            <FieldBody ColumnSize="ColumnSize.Is8">
+                <TextEdit Placeholder="Enter Game Name" @bind-Text="@GameName">
+                    <Feedback>
+                        <ValidationError>Enter a Game name!</ValidationError>
+                    </Feedback>
+                </TextEdit>
+            </FieldBody>
+        </Field>
+    </Validation>
+    <Validation Validator="@ValidateTeams">
+        <Field Horizontal="true">
+            <FieldLabel ColumnSize="ColumnSize.Is6">Number of Teams</FieldLabel>
+            <FieldBody ColumnSize="ColumnSize.Is6">
+                <Select TValue="int?">
+                    <ChildContent>
+                        <SelectItem Value="@((int?)null)"></SelectItem>
+                        <SelectItem Value="@((int?)2)">2</SelectItem>
+                        <SelectItem Value="@((int?)3)">3</SelectItem>
+                    </ChildContent>
+                    <Feedback>
+                        <ValidationError>Select a number of Teams!</ValidationError>
+                    </Feedback>
+                </Select>
+            </FieldBody>
+        </Field>
+    </Validation>
+    <Validation Validator="@ValidatePlayers">
+        <Field Horizontal="true">
+            <FieldLabel ColumnSize="ColumnSize.Is6">Number Players on each Team</FieldLabel>
+            <FieldBody ColumnSize="ColumnSize.Is6">
+                <Select TValue="int?">
+                    <ChildContent>
+                        <SelectItem Value="@((int?)null)"></SelectItem>
+                        <SelectItem Value="@((int?)1)">1</SelectItem>
+                        <SelectItem Value="@((int?)2)">2</SelectItem>
+                        <SelectItem Value="@((int?)3)">3</SelectItem>
+                    </ChildContent>
+                    <Feedback>
+                        <ValidationError>Select a number of Players!</ValidationError>
+                    </Feedback>
+                </Select>
+            </FieldBody>
+        </Field>
+    </Validation>
+    <Field Horizontal="true" JustifyContent="JustifyContent.Start">
+        <FieldBody ColumnSize="ColumnSize.Is12">
+            <Button Color="Color.Primary" Clicked="@Submit">Submit</Button>
+        </FieldBody>
+    </Field>
+</Validations>
 
 
 
@@ -44,10 +67,35 @@
     public int NumberOfPlayersOnEachTeam { get; set; }
     public int TotalNumberOfPlayers => NumberOfTeams * NumberOfPlayersOnEachTeam;
     [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+    Validations GameValidations;
 
     public void SubmitForm()
     {
         Game game = GameManager.CreateNewGame(GameName, NumberOfTeams, NumberOfPlayersOnEachTeam);
         BlazoredModal.Close();
     }
+
+    void ValidatePlayers(ValidatorEventArgs e)
+    {
+        var selectedValue = e.Value == null ? 0 : Convert.ToInt32(e.Value);
+        NumberOfPlayersOnEachTeam = selectedValue;
+        e.Status = selectedValue != 0 ? ValidationStatus.Success : ValidationStatus.Error;
+    }
+
+    void ValidateTeams(ValidatorEventArgs e)
+    {
+        var selectedValue = e.Value == null ? 0 : Convert.ToInt32(e.Value);
+        NumberOfTeams = selectedValue;
+        e.Status = selectedValue != 0 ? ValidationStatus.Success : ValidationStatus.Error;
+    }
+
+    void Submit()
+    {
+        if (GameValidations.ValidateAll())
+        {
+            Game game = GameManager.CreateNewGame(GameName, NumberOfTeams, NumberOfPlayersOnEachTeam);
+            BlazoredModal.Close();
+        }
+    }
 }
+

@@ -62,7 +62,7 @@ namespace _5Straight.Data.GameAI
             var playToMake = PlayValuator.CalculatePlay(boardValueResults, Player);
 
             // Add some delay so the AI is not too fast
-            await Task.Delay(RandomGen.Next(3000));
+            await Task.Delay(RandomGen.Next(500,2500));
 
             return playToMake;
         }

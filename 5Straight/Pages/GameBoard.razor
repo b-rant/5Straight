@@ -116,7 +116,7 @@ else
                                 @{
                                     foreach (var player in game.Players)
                                     {
-                                        <li role="presentation" class="nav-item"><a class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                        <li role="presentation" class="nav-item"><a style="pointer-events: none;" class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
                                     }
                                 }
                             </ul>

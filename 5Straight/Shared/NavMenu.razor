@@ -6,7 +6,7 @@
 
 
 <div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">5Straight</a>
+    <a class="navbar-brand" href="">5ive Straight</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -20,37 +20,21 @@
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" @onclick="ShowNewGameModal">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> New Game
+            <NavLink class="nav-link" href="/GameHistory" Match="NavLinkMatch.All">
+                <span class="oi oi-list" aria-hidden="true"></span> Finished Games
             </NavLink>
         </li>
         <li>
-            <h4 class="five-nav-headers">Your Live Games</h4>
+            <h4 class="five-nav-headers">Your Open Games</h4>
         </li>
         @{
             foreach (var game in GameManager.Games)
             {
-                if (game.Value.GameHasStarted && !game.Value.Won && game.Value.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+                if (!game.Value.Won && game.Value.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
                 {
                     <li class="nav-item px-3">
                         <NavLink class="nav-link" @onclick="() => DirectToGame(game.Value.PartitionKey)">
-                            <span class="oi oi-list-rich" aria-hidden="true"></span> @game.Value.GameName
-                        </NavLink>
-                    </li>
-                }
-            }
-        }
-        <li>
-            <h4 class="five-nav-headers">Open Games</h4>
-        </li>
-        @{
-            foreach (var game in GameManager.Games)
-            {
-                if (!game.Value.GameHasStarted)
-                {
-                    <li class="nav-item px-3">
-                        <NavLink class="nav-link" @onclick="() => DirectToGame(game.Value.PartitionKey)">
-                            <span class="oi oi-list-rich" aria-hidden="true"></span> @game.Value.GameName
+                            <span class="oi oi-bookmark" aria-hidden="true"></span> @game.Value.GameName.Substring(0, game.Value.GameName.Length > 20 ? 20 : game.Value.GameName.Length)
                         </NavLink>
                     </li>
                 }
