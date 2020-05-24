@@ -69,6 +69,8 @@ namespace _5Straight.Data
             // comes from Table Service
         }
 
+        #region Gameplay function passthrough
+
         public bool UserSelectPlayerSlot(string gamePartitionKey, int playerNumber, string userName)
         {
             var success = Games[gamePartitionKey].OwnPlayerSlot(playerNumber, userName);
@@ -81,5 +83,28 @@ namespace _5Straight.Data
             Games[gamePartitionKey].OwnPlayerSlotForAi(playerNumber);
             UpdateEveryone();
         }
+
+        public void AiDeselectPlayerSlot(string gamePartitionKey, int playerNumber)
+        {
+            Games[gamePartitionKey].RemoveAiFromPlayerSlot(playerNumber);
+            UpdateEveryone();
+        }
+
+        public string UserMakePlay(string gamePartitionKey, Player player, bool draw, int location = -1, int card = -1)
+        {
+            string response;
+            if (draw)
+            {
+                response = Games[gamePartitionKey].PlayDrawCard(player);
+            }
+            else
+            {
+                response = Games[gamePartitionKey].PlayLocation(player, location, card);
+            }
+
+            return response;
+        }
+
+        #endregion
     }
 }

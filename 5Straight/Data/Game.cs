@@ -84,11 +84,22 @@ namespace _5Straight.Data
             var playerToOwn = Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
             if (string.IsNullOrWhiteSpace(playerToOwn.PlayerOwner))
             {
-                playerToOwn.PlayerOwner = "AI Player";
+                playerToOwn.PlayerOwner = AiPlayerFactory.GetRandomNameNoDuplicates(Players);
                 playerToOwn.Npc = AiPlayerFactory.BuildAi(playerToOwn, this);
                 ValidateAndStartGame();
                 UpdateEveryone();
             }
+        }
+
+        public void RemoveAiFromPlayerSlot(int playerNumber)
+        {
+            var playerToClear = Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
+            if (!string.IsNullOrWhiteSpace(playerToClear.PlayerOwner) && playerToClear.Npc != null)
+            {
+                playerToClear.Npc = null;
+                playerToClear.PlayerOwner = "";
+            }
+            UpdateEveryone();
         }
 
         public Player GetPlayerByNumber(int playerNumber)
@@ -169,11 +180,17 @@ namespace _5Straight.Data
 
         // Private Functions
 
-        private void RunAI()
+        private async void RunAI()
         {
+            if (Won)
+            {
+                // Game is over, no reason to keep playing
+                return;
+            }
+
             if (CurrentPlayer.Npc != null)
             {
-                var play = CurrentPlayer.Npc.DeterminePlay();
+                var play = await CurrentPlayer.Npc.DeterminePlay();
 
                 if (play.Draw)
                 {

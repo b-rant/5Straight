@@ -31,7 +31,7 @@
                                     </a>
                                     if (game.Teams.Count == 2)
                                     {
-                                        <button @onclick="() => SetPlayerAsAi(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Make AI</button>
+                                        <button @onclick="() => SetPlayerAsAi(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Add AI</button>
                                     }
                                 }
                                 else
@@ -42,6 +42,10 @@
                                             <small class="text-muted">player @(player.PlayerNumber + 1)</small>
                                         </div>
                                     </a>
+                                    if (game.Teams.Count == 2 && player.Npc != null)
+                                    {
+                                        <button @onclick="() => RemovePlayerAsAi(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Remove AI</button>
+                                    }
                                 }
                             }
                         </div>
@@ -157,18 +161,33 @@ else
                     <div class="row">
                         <div class="col-md-12">
                             <div id="cardContainer" align="center">
-                                @for (int i = 0; i < 4; i++)
+                                @if (game.CurrentPlayer.Equals(player))
                                 {
-                                    @if (player.Hand.Count >= i + 1)
+                                    @for (int i = 0; i < 4; i++)
                                     {
-                                        int card = i;
-                                        <button type="button" class="btn btn-outline-primary btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(player.Hand[i])</button>
+                                        @if (player.Hand.Count >= i + 1)
+                                        {
+                                            int card = i;
+                                            <button type="button" class="btn btn-outline-primary btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(player.Hand[i])</button>
+                                        }
+                                    }
+                                    @if (player.Hand.Count <= 3)
+                                    {
+                                        <button type="button" class="btn btn-outline-success btn-lg" @onclick="() => MakeDraw()">Draw Card</button>
                                     }
                                 }
-                                @if (player.Hand.Count <= 3)
+                                else
                                 {
-                                    <button type="button" class="btn btn-outline-success btn-lg" @onclick="() => MakeDraw()">Draw Card</button>
+                                    @for (int i = 0; i < 4; i++)
+                                    {
+                                        @if (player.Hand.Count >= i + 1)
+                                        {
+                                            int card = i;
+                                            <button type="button" class="btn btn-outline-dark btn-lg disabled" >@(player.Hand[i])</button>
+                                        }
+                                    }
                                 }
+
                             </div>
                         </div>
 
@@ -214,18 +233,7 @@ else
         var latestPlays = game.GetMostRecentPlays(mostRecentShowedPlay);
         foreach (var play in latestPlays)
         {
-            if (game.Won)
-            {
-                if (player.Team.TeamNumber.Equals(game.WinningPlayer.Team.TeamNumber))
-                {
-                    toastService.ShowSuccess("Congrats! You Won!!", "GAME OVER!");
-                }
-                else
-                {
-                    toastService.ShowWarning($"Team {game.WinningPlayer.Team.TeamNumber + 1} won the game!", "GAME OVER!");
-                }
-            }
-            else if (play.PlayerNumber.Equals(player.PlayerNumber))
+            if (play.PlayerNumber.Equals(player.PlayerNumber))
             {
                 if (play.Draw)
                 {
@@ -249,6 +257,17 @@ else
             }
             mostRecentShowedPlay++;
         }
+        if (latestPlays.Any() && game.Won)
+        {
+            if (player.Team.TeamNumber.Equals(game.WinningPlayer.Team.TeamNumber))
+            {
+                toastService.ShowSuccess("Congrats! You Won!!", "GAME OVER!");
+            }
+            else
+            {
+                toastService.ShowWarning($"Team {game.WinningPlayer.Team.TeamNumber + 1} won the game!", "GAME OVER!");
+            }
+        }
     }
 
     public void Dispose()
@@ -266,9 +285,14 @@ else
         }
     }
 
-    public async void SetPlayerAsAi(int playerId)
+    public void SetPlayerAsAi(int playerId)
     {
         GameManager.AiSelectPlayerSlot(gameId, playerId);
+    }
+
+    public void RemovePlayerAsAi(int playerId)
+    {
+        GameManager.AiDeselectPlayerSlot(gameId, playerId);
     }
 
     // Game Board
@@ -302,7 +326,7 @@ else
             return;
         }
 
-        var response = game.PlayLocation(game.CurrentPlayer, locationNumber, game.CurrentPlayer.Hand[selectedCard]);
+        var response = GameManager.UserMakePlay(gameId, player, false, locationNumber, game.CurrentPlayer.Hand[selectedCard]);
         if (!string.IsNullOrWhiteSpace(response))
         {
             toastService.ShowError(response, "");
@@ -320,7 +344,7 @@ else
             return;
         }
 
-        var response = game.PlayDrawCard(player);
+        var response = GameManager.UserMakePlay(gameId, player, true);
         if (!string.IsNullOrWhiteSpace(response))
         {
             toastService.ShowError(response, "Error");
