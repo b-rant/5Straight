@@ -184,7 +184,7 @@ namespace _5Straight.Data
         {
             if (Won)
             {
-                // Gmae is over, no reason to keep playing
+                // Game is over, no reason to keep playing
                 return;
             }
 
