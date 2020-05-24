@@ -1,25 +1,44 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Azure.Cosmos.Table;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace _5Straight.Data.Models
 {
-    public class Play
+    public class Play : TableEntity
     {
-        [JsonProperty("playerNum")]
         public int PlayerNumber { get; set; }
 
-        [JsonProperty("turnNum")]
         public int TurnNumber { get; set; }
 
-        [JsonProperty("cardNum")]
         public int CardNumber { get; set; }
 
-        [JsonProperty("draw")]
         public bool Draw { get; set; }
 
-        [JsonProperty("locationNum")]
         public int PlayedLocationNumber { get; set; }
 
+        //Serializable:
+        [IgnoreProperty]
         public List<int> PlayerHand { get; set; }
+
+
+        #region StorageFunctions
+        public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
+        {
+            //write the simple properties:
+            var results = base.WriteEntity(operationContext);
+
+            //serialize the complex properties:
+            results["PlayerHand"] = new EntityProperty(JsonConvert.SerializeObject(PlayerHand));
+
+            return results;
+        }
+
+        public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
+        {
+            base.ReadEntity(properties, operationContext);
+
+            PlayerHand = JsonConvert.DeserializeObject<List<int>>(properties["PlayerHand"].StringValue);
+        }
+        #endregion
     }
 }

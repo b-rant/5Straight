@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Cosmos.Table;
+﻿using Blazorise;
+using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
 using System;
@@ -40,6 +41,27 @@ namespace _5Straight.Data.Proxies
             {
                 throw;
             }
+        }
+
+        public TableBatchResult ExecuteBatch(TableBatchOperation tableOp, string tableName)
+        {
+            if (tableOp.Count > 0) //Cannot execute an empty batch
+            {
+                try
+                {
+                    CloudTable table = tableClient.GetTableReference(tableName);
+
+                    TableBatchResult result = table.ExecuteBatch(tableOp);
+
+                    return result;
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
+            }
+
+            return new TableBatchResult();
         }
 
         public IEnumerable<t> ExecuteQuery<t>(TableQuery<t> query, string tableName) where t : TableEntity, new()

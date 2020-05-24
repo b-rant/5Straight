@@ -14,17 +14,21 @@ namespace _5Straight.Data
         public delegate Task ClientCallback();
         public readonly List<Delegate> Clients;
 
-        public GameManager(GameTable gameStateTable)
+        public GameManager(GameTable gameTable)
         {
             Clients = new List<Delegate>();
-            Games = new Dictionary<string, Game>();
-            GameTable = gameStateTable;
+            GameTable = gameTable;
+            Games = GameTable.LoadAllGames();
 
-            // TEMP GAME FOR TESTING!!
-            Game game = GameFactory.BuildNewGame("Test Game", 2, 1);
-            game.PartitionKey = $"{Games.Count + 1}";
+            foreach(Game g in Games.Values)
+            {
+                g.SaveGameDelegate = SaveGame;
+            }
+        }
 
-            Games.Add(game.PartitionKey, game);
+        public void SaveGame(Game game)
+        {
+            GameTable.SaveGame(game);
         }
 
         public void ConnectClientToGame(string id, ClientCallback callback)
@@ -51,6 +55,7 @@ namespace _5Straight.Data
             Game game = GameFactory.BuildNewGame(gameName, numTeams, numPlayersPerTeam);
             //game.PartitionKey = $"{Games.Count + 1}";
 
+            game.SaveGameDelegate = SaveGame;
             Games.Add(game.PartitionKey, game);
 
             UpdateEveryone();
