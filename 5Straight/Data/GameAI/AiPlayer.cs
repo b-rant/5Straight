@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace _5Straight.Data.GameAI
 {
@@ -12,6 +14,7 @@ namespace _5Straight.Data.GameAI
         private readonly PlayValuator PlayValuator;
         private readonly Player Player;
         private readonly Game Game;
+        private readonly Random RandomGen;
 
         public readonly Guid Id;
 
@@ -23,9 +26,10 @@ namespace _5Straight.Data.GameAI
             Player = player;
             Game = game;
             Id = chromosome.Id;
+            RandomGen = new Random();
         }
 
-        public Play DeterminePlay()
+        public async Task<Play> DeterminePlay()
         {
             // Player must draw so short circut here
             if (Player.Hand.Count == 0)
@@ -56,6 +60,9 @@ namespace _5Straight.Data.GameAI
 
             // Determine Best Play with the PlayValuator
             var playToMake = PlayValuator.CalculatePlay(boardValueResults, Player);
+
+            // Add some delay so the AI is not too fast
+            await Task.Delay(RandomGen.Next(3000));
 
             return playToMake;
         }

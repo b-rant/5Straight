@@ -17,6 +17,9 @@ using _5Straight.Data;
 using _5Straight.Data.Proxies;
 using Blazored.Modal;
 using Blazored.Toast;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 
 namespace _5Straight
 {
@@ -51,6 +54,10 @@ namespace _5Straight
             services.AddSingleton<GameManager>();
             services.AddBlazoredModal();
             services.AddBlazoredToast();
+            services.AddBlazorise(options =>
+                  {
+                      options.ChangeTextOnKeyPress = true;
+                  }).AddBootstrapProviders().AddFontAwesomeIcons();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -71,6 +78,8 @@ namespace _5Straight
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.ApplicationServices.UseBootstrapProviders().UseFontAwesomeIcons();
 
             app.UseAuthentication();
             app.UseAuthorization();

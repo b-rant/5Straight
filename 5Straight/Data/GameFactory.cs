@@ -69,7 +69,8 @@ namespace _5Straight.Data
                 {
                     //Set Player number
                     PlayerNumber = i,
-                    Hand = new List<int>()
+                    Hand = new List<int>(),
+                    PlayerOwner = ""
                 };
                 players.Add(tempPlayer);
             };
