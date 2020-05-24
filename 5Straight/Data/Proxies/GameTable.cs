@@ -1,4 +1,6 @@
-﻿using _5Straight.Data.Models;
+﻿using _5Straight.Data.GameAI;
+using _5Straight.Data.Models;
+using Blazorise;
 using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
@@ -10,14 +12,13 @@ namespace _5Straight.Data.Proxies
     public class GameTable
     {
         private TableService tableService;
-        private string tableName = "Games";
 
         public GameTable(TableService tableService)
         {
             this.tableService = tableService;
         }
 
-        #region InsertOrUpdate methods
+        #region Write methods
         public void SaveGame(Game game)
         {
             if (game is null)
@@ -27,45 +28,62 @@ namespace _5Straight.Data.Proxies
 
             try
             {
-                TableOperation insertOrMergeOperation = TableOperation.InsertOrMerge(game);
+                //Game
+                TableOperation saveGame = TableOperation.InsertOrReplace(game);
 
-                TableResult response = tableService.Execute(insertOrMergeOperation, tableName);
+                TableResult saveGameResult = tableService.Execute(saveGame, "Games");
 
-                //Board
 
-                //Deck
+                //Board (or BoardLocations)
+                TableBatchOperation saveBoard = new TableBatchOperation();
+
+                foreach (BoardLocation bl in game.Board)
+                {
+                    bl.PartitionKey = game.PartitionKey;
+                    bl.RowKey = bl.DisplayNumber;
+                    saveBoard.InsertOrReplace(bl);
+                }
+
+                TableBatchResult saveBoardResult = tableService.ExecuteBatch(saveBoard, "BoardLocations");
+
 
                 //Plays
+                TableBatchOperation savePlays = new TableBatchOperation();
+
+                foreach (Play p in game.Plays)
+                {
+                    p.PartitionKey = game.PartitionKey;
+                    p.RowKey = p.TurnNumber.ToString();
+                    savePlays.InsertOrReplace(p);
+                }
+
+                TableBatchResult savePlaysResult = tableService.ExecuteBatch(savePlays, "Plays");
+
 
                 //Teams
+                TableBatchOperation saveTeams = new TableBatchOperation();
+
+                foreach (Team t in game.Teams)
+                {
+                    t.PartitionKey = game.PartitionKey;
+                    t.RowKey = t.TeamNumber.ToString();
+                    saveTeams.InsertOrReplace(t);
+                }
+
+                TableBatchResult saveTeamsResult = tableService.ExecuteBatch(saveTeams, "Teams");
+
 
                 //Players
+                TableBatchOperation savePlayers = new TableBatchOperation();
 
-                //CurrentPlayer
+                foreach (Player p in game.Players)
+                {
+                    p.PartitionKey = game.PartitionKey;
+                    p.RowKey = p.PlayerNumber.ToString();
+                    savePlayers.InsertOrReplace(p);
+                }
 
-                //WinningPlayer
-                //save all the complex properties to their own tables:
-                //save list of plays
-                //save list of 
-            }
-            catch (StorageException e)
-            {
-                throw;
-            }
-        }
-
-        public async void Insert(Game gameState)
-        {
-            if (gameState is null)
-            {
-                throw new ArgumentNullException("gameState");
-            }
-
-            try
-            {
-                TableOperation insertOrMergeOperation = TableOperation.InsertOrMerge(gameState);
-
-                TableResult result = tableService.Execute(insertOrMergeOperation, tableName);
+                TableBatchResult savePlayersResult = tableService.ExecuteBatch(savePlayers, "Players");
             }
             catch (StorageException e)
             {
@@ -74,41 +92,87 @@ namespace _5Straight.Data.Proxies
         }
         #endregion
 
-        #region Retrieval methods
-        public GameState GetGameState(string partitionKey, string rowKey)
+        #region Read methods
+        public Dictionary<string, Game> LoadAllGames()
         {
-            if (partitionKey is null)
-            {
-                throw new ArgumentNullException("partitionKey");
-            }
-            else if (rowKey is null)
-            {
-                throw new ArgumentNullException("rowKey");
-            }
+            Dictionary<string, Game> allGames = new Dictionary<string, Game>();
 
             try
             {
-                TableOperation retrieveOperation = TableOperation.Retrieve(partitionKey, rowKey);
-
-                var response = tableService.Execute(retrieveOperation, tableName);
-
-                return (GameState) response.Result;
+                TableQuery<Game> loadGames = new TableQuery<Game>().Select(new List<string>()); //only get partitionkey and rowkey
+                var loadGamesResult = tableService.ExecuteQuery(loadGames, "Games");
+                
+                foreach(Game g in loadGamesResult)
+                {
+                    Game g2 = LoadGame(g.PartitionKey);
+                    allGames.Add(g2.PartitionKey, g2);
+                }
             }
             catch (StorageException e)
             {
                 throw;
             }
+
+            return allGames;
         }
 
-        public async Task<IEnumerable<GameState>> GetGameStatesForUser(string userNameOrSomething)
+        public Game LoadGame(string partitionKey)
         {
             try
             {
-                TableQuery<GameState> query = new TableQuery<GameState>();
+                //Game
+                TableOperation loadGame = TableOperation.Retrieve<Game>(partitionKey, "Game");
+                TableResult loadGameResult = tableService.Execute(loadGame, "Games");
+                Game game = loadGameResult.Result as Game;
 
-                var gameStates = await Task.Run(() => tableService.ExecuteQuery(query, tableName));
+                //Players
+                TableQuery<Player> loadPlayers = new TableQuery<Player>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
+                var players = tableService.ExecuteQuery(loadPlayers, "Players");
+                game.Players = players.ToList<Player>();
 
-                return gameStates;
+                //Teams
+                TableQuery<Team> loadTeams = new TableQuery<Team>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
+                var teams = tableService.ExecuteQuery(loadTeams, "Teams");
+                game.Teams = teams.ToList<Team>();
+
+                //Wire-up references between Teams and Players:
+                foreach (Player p in game.Players)
+                {
+                    p.Team = game.Teams[p.PlayerNumber % game.Teams.Count];
+                    game.Teams[p.PlayerNumber % game.Teams.Count].Players.Add(p);
+
+                    if(p.IsAI.Equals(true))
+                    {
+                        p.Npc = AiPlayerFactory.BuildAi(p, game);
+                    }
+                }
+
+                //Board (aka BoardLocations)
+                TableQuery<BoardLocation> loadBoard = new TableQuery<BoardLocation>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
+                var board = tableService.ExecuteQuery(loadBoard, "BoardLocations");
+                game.Board = board.ToList<BoardLocation>();
+
+                //Wire-up references within BoardLocation:
+                foreach (BoardLocation bl in game.Board)
+                {
+                    if (bl.FilledByPlayerNumber >= 0)
+                    {
+                        bl.FilledBy = game.Players[bl.FilledByPlayerNumber];
+                    }
+                }
+
+                //Plays
+                TableQuery<Play> loadPlays = new TableQuery<Play>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
+                var plays = tableService.ExecuteQuery(loadPlays, "Plays");
+                game.Plays = plays.ToList<Play>();
+                //Play has no references to rehydrate.
+
+                //Current Player
+                game.CurrentPlayer = game.Players[game.TurnNumber % game.Players.Count];
+
+                game.RunAI();
+
+                return game;
             }
             catch (StorageException e)
             {

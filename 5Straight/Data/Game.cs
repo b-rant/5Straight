@@ -2,6 +2,7 @@
 using _5Straight.Data.Models;
 using _5Straight.Data.Proxies;
 using Microsoft.Azure.Cosmos.Table;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +12,11 @@ namespace _5Straight.Data
 {
     public class Game : TableEntity
     {
-        //public readonly GameState GameState;
-        public readonly string GameName;
+        public readonly List<Delegate> Clients;
 
-        public bool GameHasStarted { get; private set; }
+        public string GameName { get; set; }
+
+        public bool GameHasStarted { get; set; }
 
         public bool Won { get; set; }
 
@@ -22,25 +24,37 @@ namespace _5Straight.Data
 
         public int HighestPlayable { get; set; }
 
-        public List<BoardLocation> Board { get; set; }
-
+        //Serializable properties:
+        [IgnoreProperty]
         public List<int> Deck { get; set; }
 
+        //Un-serializable: (need to manually rehydrate)
+        [IgnoreProperty]
+        public List<BoardLocation> Board { get; set; }
+
+        [IgnoreProperty]
         public List<Play> Plays { get; set; }
 
+        [IgnoreProperty]
         public List<Team> Teams { get; set; }
 
+        [IgnoreProperty]
         public List<Player> Players { get; set; }
 
+        [IgnoreProperty]
         public Player CurrentPlayer { get; set; }
 
+        [IgnoreProperty]
         public Player WinningPlayer { get; internal set; }
 
-        public readonly List<Delegate> Clients; 
+        public delegate void SaveGameCallback(Game game);
+        public SaveGameCallback SaveGameDelegate;
 
+        #region Constructors
         public Game()
         {
             //Empty constructor required by Table Storage.
+            Clients = new List<Delegate>();
         }
 
         public Game(Guid partitionKey, string gameName, List<BoardLocation> board, List<int> deck, List<Team> teams, List<Player> players)
@@ -59,6 +73,27 @@ namespace _5Straight.Data
             HighestPlayable = 99;
             Clients = new List<Delegate>();
         }
+        #endregion
+
+        #region StorageFunctions
+        public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
+        {
+            //write the simple properties:
+            var results = base.WriteEntity(operationContext);
+
+            //serialize the complex properties:
+            results["Deck"] = new EntityProperty(JsonConvert.SerializeObject(Deck));
+
+            return results;
+        }
+
+        public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
+        {
+            base.ReadEntity(properties, operationContext);
+
+            Deck = JsonConvert.DeserializeObject<List<int>>(properties["Deck"].StringValue);
+        }
+        #endregion
 
         // Public Functions
 
@@ -177,10 +212,7 @@ namespace _5Straight.Data
             return "";
         }
 
-
-        // Private Functions
-
-        private async void RunAI()
+        public async void RunAI()
         {
             if (Won)
             {
@@ -202,6 +234,9 @@ namespace _5Straight.Data
                 }
             }
         }
+
+
+        // Private Functions
 
         private bool ValidateAndStartGame()
         {
@@ -248,12 +283,15 @@ namespace _5Straight.Data
             {
                 await Task.Run(() => d.DynamicInvoke());
             }
+
+            SaveGameDelegate.Invoke(this);
         }
 
         private void FillLocation(Player player, int locationNumber)
         {
             Board[locationNumber].Filled = true;
             Board[locationNumber].FilledBy = player;
+            Board[locationNumber].FilledByPlayerNumber = player.PlayerNumber;
         }
 
         private bool CheckWinCondition(int location, Team team)
