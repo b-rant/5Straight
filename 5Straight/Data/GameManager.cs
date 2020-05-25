@@ -47,6 +47,22 @@ namespace _5Straight.Data
             }
         }
 
+        public void DisconnectClientFromGame(string id, ClientCallback callback)
+        {
+            if (Games[id].Clients.Contains(callback))
+            {
+                Games[id].Clients.Remove(callback);
+            }
+        }
+        
+        public void DisconnectClientFromGameManager(ClientCallback callback)
+        {
+            if (Clients.Contains(callback))
+            {
+                Clients.Remove(callback);
+            }
+        }
+
         private async void UpdateEveryone()
         {
             foreach (Delegate d in Clients)
