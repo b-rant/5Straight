@@ -14,7 +14,7 @@
                 <CardTitle>Finished Games</CardTitle>
             </CardHeader>
             <CardBody>
-                <DataGrid TItem="Game" Data="@FilteredGames" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="true" Bordered="true">
+                <DataGrid TItem="Game" Data="@FilteredGames" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="false" Bordered="true">
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameId)" Caption="Game ID" Editable="false"></DataGridColumn>
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameName)" Caption="Game Name" Editable="false"></DataGridColumn>
                     <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Teams" Editable="false" Sortable="false" Filterable="false">
@@ -38,7 +38,10 @@
                         <DisplayTemplate>
                             @{
                                 var player = (context as Game)?.WinningPlayer;
-                                @($"{player.PlayerOwner}")
+                                if (player != null)
+                                {
+                                    @($"{player.PlayerOwner}")
+                                }
                             }
                         </DisplayTemplate>
                     </DataGridColumn>
@@ -46,7 +49,10 @@
                         <DisplayTemplate>
                             @{
                                 var player = (context as Game)?.WinningPlayer;
-                                @($"{player.Team.TeamNumber}")
+                                if (player != null)
+                                {
+                                    @($"{player.Team.TeamNumber}")
+                                }
                             }
                         </DisplayTemplate>
                     </DataGridColumn>

@@ -1,6 +1,7 @@
 ﻿@page "/GameBoard/{gameId}"
 
 @using _5Straight.Data
+@using _5Straight.Data.Models
 @implements IDisposable
 @inject GameManager GameManager
 @inject NavigationManager NavigationManager
@@ -79,7 +80,8 @@ else
                             <tbody>
                                 @for (int i = game.Plays.Count - 1; i >= 0; i--)
                                 {
-                                    var play = game.Plays[i];
+                                    var orderedPlays = game.Plays.OrderBy(x => x.TurnNumber).ToList();
+                                    var play = orderedPlays[i];
                                     var player = game.Players.Where(p => p.PlayerNumber.Equals(play.PlayerNumber)).FirstOrDefault();
                                     <tr>
                                         <td>@play.TurnNumber</td>
@@ -161,7 +163,7 @@ else
                     <div class="row">
                         <div class="col-md-12">
                             <div id="cardContainer" align="center">
-                                @if (game.CurrentPlayer.Equals(player))
+                                @if (game.CurrentPlayer.Equals(player) && !game.Won)
                                 {
                                     @for (int i = 0; i < 4; i++)
                                     {
@@ -183,7 +185,7 @@ else
                                         @if (player.Hand.Count >= i + 1)
                                         {
                                             int card = i;
-                                            <button type="button" class="btn btn-outline-dark btn-lg disabled" >@(player.Hand[i])</button>
+                                            <button type="button" class="btn btn-outline-dark btn-lg disabled">@(player.Hand[i])</button>
                                         }
                                     }
                                 }
@@ -196,7 +198,7 @@ else
             }
             else
             {
-                <h5> You are in Spectator Mode, you can watch the game but cannot play.</h5>
+                <Alert Color="Color.Primary" Visible="true"> You are in Spectator Mode. You can watch this game, but cannot play.</Alert>
             }
         </div>
     }
@@ -210,7 +212,7 @@ else
     private Task<AuthenticationState> authenticationStateTask { get; set; }
     private AuthenticationState authState;
 
-    protected async override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         try
         {
@@ -228,12 +230,24 @@ else
 
     public async Task OnNotify()
     {
-        var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+        var players = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name));
+        Player player = players.Any() ? players.First() : null;
         await InvokeAsync(() => StateHasChanged());
         var latestPlays = game.GetMostRecentPlays(mostRecentShowedPlay);
         foreach (var play in latestPlays)
         {
-            if (play.PlayerNumber.Equals(player.PlayerNumber))
+            if (player == null)
+            {
+                if (play.Draw)
+                {
+                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} drew a card", "Draw");
+                }
+                else
+                {
+                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} played the {play.CardNumber} in the {play.PlayedLocationNumber}", "Play");
+                }
+            }
+            else if (play.PlayerNumber.Equals(player.PlayerNumber))
             {
                 if (play.Draw)
                 {
@@ -259,7 +273,7 @@ else
         }
         if (latestPlays.Any() && game.Won)
         {
-            if (player.Team.TeamNumber.Equals(game.WinningPlayer.Team.TeamNumber))
+            if (player != null && player.Team.TeamNumber.Equals(game.WinningPlayer.Team.TeamNumber))
             {
                 toastService.ShowSuccess("Congrats! You Won!!", "GAME OVER!");
             }

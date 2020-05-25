@@ -1,11 +1,9 @@
 ﻿using _5Straight.Data.GameAI;
 using _5Straight.Data.Models;
-using Blazorise;
 using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace _5Straight.Data.Proxies
 {
@@ -171,6 +169,13 @@ namespace _5Straight.Data.Proxies
                 game.CurrentPlayer = game.Players[game.TurnNumber % game.Players.Count];
 
                 game.RunAI();
+
+                // Set the winning player if the game is over. The winning player if the game is over will be the last person to play
+                if (game.Won)
+                {
+                    var orderedPlays = game.Plays.OrderBy(x => x.TurnNumber).ToList();
+                    game.WinningPlayer = game.Players[orderedPlays.Last().PlayerNumber];
+                }
 
                 return game;
             }
