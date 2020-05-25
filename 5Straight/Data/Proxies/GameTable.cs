@@ -168,14 +168,13 @@ namespace _5Straight.Data.Proxies
                 //Current Player
                 game.CurrentPlayer = game.Players[game.TurnNumber % game.Players.Count];
 
-                game.RunAI();
-
-                // Set the winning player if the game is over. The winning player if the game is over will be the last person to play
-                if (game.Won)
+                //Winning Player
+                if (game.Won == true)
                 {
-                    var orderedPlays = game.Plays.OrderBy(x => x.TurnNumber).ToList();
-                    game.WinningPlayer = game.Players[orderedPlays.Last().PlayerNumber];
+                    game.WinningPlayer = game.CurrentPlayer;
                 }
+
+                game.RunAI();
 
                 return game;
             }
