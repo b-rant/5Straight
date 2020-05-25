@@ -33,7 +33,7 @@
                 if (!game.Value.Won && game.Value.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
                 {
                     <li class="nav-item px-3">
-                        <NavLink class="nav-link" @onclick="() => DirectToGame(game.Value.PartitionKey)">
+                        <NavLink class="nav-link" href="@($"/GameBoard/{game.Value.GameId}")">
                             <span class="oi oi-bookmark" aria-hidden="true"></span> @game.Value.GameName.Substring(0, game.Value.GameName.Length > 20 ? 20 : game.Value.GameName.Length)
                         </NavLink>
                     </li>
@@ -57,11 +57,6 @@
     }
 
     // Game Menu
-
-    public void DirectToGame(string gameId)
-    {
-        NavigationManager.NavigateTo($"GameBoard/{gameId}", true);
-    }
 
     void ShowNewGameModal()
     {

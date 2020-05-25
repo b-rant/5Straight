@@ -33,12 +33,18 @@ namespace _5Straight.Data
 
         public void ConnectClientToGame(string id, ClientCallback callback)
         {
-            Games[id].Clients.Add(callback);
+            if(!Games[id].Clients.Contains(callback))
+            {
+                Games[id].Clients.Add(callback);
+            }
         }
 
         public void ConnectClientToGameManager(ClientCallback callback)
         {
-            Clients.Add(callback);
+            if (!Clients.Contains(callback))
+            {
+                Clients.Add(callback);
+            }
         }
 
         private async void UpdateEveryone()

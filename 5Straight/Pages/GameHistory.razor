@@ -60,7 +60,7 @@
                         <DisplayTemplate>
                             @{
                                 var game = (context as Game);
-                                <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">View</Button>
+                                <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">View</a>
                             }
                         </DisplayTemplate>
                     </DataGridColumn>
@@ -92,12 +92,6 @@
     {
         FilteredGames = Games.Values.Where(x => !x.Won).ToList();
         await InvokeAsync(() => StateHasChanged());
-    }
-
-
-    public void DirectToGame(string gameId)
-    {
-        NavigationManager.NavigateTo($"GameBoard/{gameId}", true);
     }
 
     public void Dispose()

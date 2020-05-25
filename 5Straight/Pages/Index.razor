@@ -43,11 +43,11 @@
                                 var openPlayers = game?.Players.Where(x => x.PlayerOwner.Equals(""));
                                 if (openPlayers.Any())
                                 {
-                                    <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">Join</Button>
+                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Join</a>
                                 }
                                 else
                                 {
-                                    <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">Watch</Button>
+                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Watch</a>
                                 }
                             }
                         </DisplayTemplate>
@@ -76,11 +76,11 @@
                                 var ownedPlayer = game?.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name));
                                 if (ownedPlayer.Any())
                                 {
-                                    <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">Continue Playing</Button>
+                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Continue Playing</a>
                                 }
                                 else
                                 {
-                                    <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">Watch</Button>
+                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Watch</a>
                                 }
                             }
                         </DisplayTemplate>
@@ -98,9 +98,9 @@
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; }
     private AuthenticationState authState;
-    private Dictionary<string, Game> Games;
+    private Dictionary<string, Game> Games = new Dictionary<string, Game>();
 
-    protected override async void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         authState = await authenticationStateTask;
         GameManager.ConnectClientToGameManager(OnNotify);
@@ -120,11 +120,6 @@
         };
 
         Modal.Show<NewGame>("Create New Game", options);
-    }
-
-    public void DirectToGame(string gameId)
-    {
-        NavigationManager.NavigateTo($"GameBoard/{gameId}", true);
     }
 
     public void Dispose()

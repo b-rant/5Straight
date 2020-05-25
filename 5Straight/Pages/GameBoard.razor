@@ -212,7 +212,7 @@ else
     private Task<AuthenticationState> authenticationStateTask { get; set; }
     private AuthenticationState authState;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         try
         {
