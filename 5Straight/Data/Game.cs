@@ -47,7 +47,7 @@ namespace _5Straight.Data
         public Player CurrentPlayer { get; set; }
 
         [IgnoreProperty]
-        public Player WinningPlayer { get; internal set; }
+        public Player WinningPlayer { get;  set; }
 
         public delegate void SaveGameCallback(Game game);
         public SaveGameCallback SaveGameDelegate;

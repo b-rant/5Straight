@@ -9,7 +9,6 @@
 
 <Row>
     <Column>
-        <DisplayHeading Size="DisplayHeadingSize.Is3">5ive Straight</DisplayHeading>
         <Card Margin="Margin.Is4.OnY">
             <CardHeader>
                 <CardTitle>Open Games</CardTitle>
@@ -17,7 +16,7 @@
             <CardBody>
                 <CardText Margin="Margin.Is3">Create a new game or join an open game! <Button class="btn btn-primary" Clicked="ShowNewGameModal">Create New Game</Button></CardText>
 
-                <DataGrid TItem="Game" Data="@FilteredGames" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="true" Bordered="true">
+                <DataGrid TItem="Game" Data="@Games.Values.Where(x => !x.GameHasStarted)" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="false" Bordered="true">
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameId)" Caption="Game ID" Editable="false"></DataGridColumn>
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameName)" Caption="Game Name" Editable="false"></DataGridColumn>
                     <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Teams" Editable="false" Sortable="false" Filterable="false">
@@ -44,11 +43,44 @@
                                 var openPlayers = game?.Players.Where(x => x.PlayerOwner.Equals(""));
                                 if (openPlayers.Any())
                                 {
-                                    <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">Join</Button>
+                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Join</a>
                                 }
                                 else
                                 {
-                                    <Button class="btn btn-primary" Clicked="() => DirectToGame(game.GameId)">Watch</Button>
+                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Watch</a>
+                                }
+                            }
+                        </DisplayTemplate>
+                    </DataGridColumn>
+                </DataGrid>
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
+
+<Row>
+    <Column>
+        <Card Margin="Margin.Is4.OnY">
+            <CardHeader>
+                <CardTitle>Live Games</CardTitle>
+            </CardHeader>
+            <CardBody>
+                <DataGrid TItem="Game" Data="@Games.Values.Where(x => x.GameHasStarted && !x.Won)" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="false" Bordered="true">
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.GameId)" Caption="Game ID" Editable="false"></DataGridColumn>
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.GameName)" Caption="Game Name" Editable="false"></DataGridColumn>
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.TurnNumber)" Caption="Turn Number" Editable="false" Sortable="false" Filterable="false"></DataGridColumn>
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Join/Watch Game" Editable="false" Sortable="false" Filterable="false">
+                        <DisplayTemplate>
+                            @{
+                                var game = (context as Game);
+                                var ownedPlayer = game?.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name));
+                                if (ownedPlayer.Any())
+                                {
+                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Continue Playing</a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Watch</a>
                                 }
                             }
                         </DisplayTemplate>
@@ -66,20 +98,17 @@
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; }
     private AuthenticationState authState;
-    private Dictionary<string, Game> Games;
-    private List<Game> FilteredGames;
+    private Dictionary<string, Game> Games = new Dictionary<string, Game>();
 
-    protected override async void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         authState = await authenticationStateTask;
         GameManager.ConnectClientToGameManager(OnNotify);
         Games = GameManager.Games;
-        FilteredGames = Games.Values.Where(x => !x.Won).ToList();
     }
 
     public async Task OnNotify()
     {
-        FilteredGames = Games.Values.Where(x => !x.Won).ToList();
         await InvokeAsync(() => StateHasChanged());
     }
 
@@ -93,14 +122,9 @@
         Modal.Show<NewGame>("Create New Game", options);
     }
 
-    public void DirectToGame(string gameId)
-    {
-        NavigationManager.NavigateTo($"GameBoard/{gameId}", true);
-    }
-
     public void Dispose()
     {
-
+        GameManager.DisconnectClientFromGameManager(OnNotify);
     }
 
 }

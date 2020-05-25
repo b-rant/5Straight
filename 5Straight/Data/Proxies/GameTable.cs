@@ -1,11 +1,9 @@
 ﻿using _5Straight.Data.GameAI;
 using _5Straight.Data.Models;
-using Blazorise;
 using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace _5Straight.Data.Proxies
 {
@@ -169,6 +167,12 @@ namespace _5Straight.Data.Proxies
 
                 //Current Player
                 game.CurrentPlayer = game.Players[game.TurnNumber % game.Players.Count];
+
+                //Winning Player
+                if (game.Won == true)
+                {
+                    game.WinningPlayer = game.CurrentPlayer;
+                }
 
                 game.RunAI();
 
