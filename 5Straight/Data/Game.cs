@@ -68,7 +68,7 @@ namespace _5Straight.Data
             Deck = deck;
             Teams = teams;
             Players = players;
-            CurrentPlayer = players[0];
+            CurrentPlayer = Players[TurnNumber % Players.Count];
             Plays = new List<Play>();
             TurnNumber = 0;
             Won = false;
@@ -177,7 +177,7 @@ namespace _5Straight.Data
             if (CheckWinCondition(location, player.Team))
             {
                 Won = true;
-                WinningPlayer = CurrentPlayer;
+                WinningPlayer = player;
             }
             else
             {

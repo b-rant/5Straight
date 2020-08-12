@@ -129,6 +129,7 @@ namespace _5Straight.Data
                 response = Games[gamePartitionKey].PlayLocation(player, location, card);
             }
 
+            UpdateEveryone();
             return response;
         }
 
