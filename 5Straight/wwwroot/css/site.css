@@ -31,9 +31,10 @@ app {
 }
 
     .main .top-row {
-        background-color: rgba(208, 241, 234,.5);
-        border-bottom: 1px solid #d6d5d5;
+        background-color: #b8d8ed;
         justify-content: flex-end;
+        z-index: 10;
+        border-bottom: solid 1px rgb(29, 67, 85);
     }
 
         .main .top-row > a, .main .top-row .btn-link {
@@ -47,7 +48,7 @@ app {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(19, 71, 6) 0%, #c7faf0 80%);
+    background-image: linear-gradient(180deg, rgb(29, 67, 85) 0%, #31708e 80%);
 }
 
     .sidebar .top-row {
@@ -221,6 +222,11 @@ app {
     padding: 1%;
 }
 
+#boardUberContainer{
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
 #board table, #board td {
     border: 4px solid #545454;
     border-collapse: collapse;
@@ -269,6 +275,22 @@ app {
     outline-offset: -8px;
 }
 
+.boardShadowTeam0 {
+    box-shadow: 0px 0px 10px 10px var(--team0-color);
+}
+
+.boardShadowTeam1 {
+    box-shadow: 0px 0px 10px 10px var(--team1-color);
+}
+
+.boardShadowTeam2 {
+    box-shadow: 0px 0px 10px 10px var(--team2-color);
+}
+
+.boardShadow {
+    box-shadow: 0px 0px 10px 10px #e6ecf3;
+}
+
 /* Game Info CSS */
 
 
@@ -301,10 +323,17 @@ app {
 /* General UI Styling */
 
 .card-header {
-    background-color: rgba(208, 241, 234,.5);
+    background-color: #b8d8ed;
+}
+
+.card-body {
+    background-color: #f7f9fb;
 }
 
 thead {
-    background-color: rgba(208, 241, 234,.5);
+    background-color: #b8d8ed;
 }
 
+.page-item.active.disabled .page-link {
+    color: white;
+}

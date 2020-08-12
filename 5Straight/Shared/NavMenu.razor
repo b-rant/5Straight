@@ -32,11 +32,19 @@
             {
                 if (!game.Value.Won && game.Value.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
                 {
-                    <li class="nav-item px-3">
-                        <NavLink class="nav-link" href="@($"/GameBoard/{game.Value.GameId}")">
-                            <span class="oi oi-bookmark" aria-hidden="true"></span> @game.Value.GameName.Substring(0, game.Value.GameName.Length > 20 ? 20 : game.Value.GameName.Length)
-                        </NavLink>
-                    </li>
+                    var gameName = game.Value.GameName.Substring(0, game.Value.GameName.Length > 20 ? 20 : game.Value.GameName.Length);
+                    gameName = gameName.Length < game.Value.GameName.Length ? $"{gameName}..." : gameName;
+                    <NavLink class="nav-link" href="@($"/GameBoard/{game.Value.GameId}")">
+                        <Card Margin="Margin.Is1.FromBottom" Background="Background.Light" WhiteText="false" Style="color:black">
+                            <CardBody Margin="Margin.Is0" Style="padding:.5rem">
+                                <CardTitle Size="7">@gameName</CardTitle>
+                                <CardText>
+                                    <span style="float:left"><span class="oi oi-people" aria-hidden="true"></span> @($"{game.Value.Players.Count}")</span>
+                                    <span style="float:right"><span class="oi oi-timer" aria-hidden="true"></span> @($"{game.Value.TurnNumber}")</span>
+                                </CardText>
+                            </CardBody>
+                        </Card>
+                    </NavLink>
                 }
             }
         }

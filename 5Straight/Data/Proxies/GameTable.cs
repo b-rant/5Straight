@@ -171,7 +171,7 @@ namespace _5Straight.Data.Proxies
                 //Winning Player
                 if (game.Won == true)
                 {
-                    game.WinningPlayer = game.CurrentPlayer;
+                    game.WinningPlayer =  game.Players[game.Plays.OrderByDescending(x => x.TurnNumber).ToList().Last().PlayerNumber];
                 }
 
                 game.RunAI();

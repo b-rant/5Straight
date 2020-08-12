@@ -78,26 +78,38 @@ else
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (int i = game.Plays.Count - 1; i >= 0; i--)
-                                {
+                                @{
                                     var orderedPlays = game.Plays.OrderBy(x => x.TurnNumber).ToList();
-                                    var play = orderedPlays[i];
-                                    var player = game.Players.Where(p => p.PlayerNumber.Equals(play.PlayerNumber)).FirstOrDefault();
-                                    <tr>
-                                        <td>@play.TurnNumber</td>
-                                        <td>@player.PlayerOwner.Split('@')[0]</td>
-                                        <td>@(play.Draw ? "Draw" : "Play")</td>
-                                        @if (!play.Draw)
-                                        {
-                                            <td>@play.PlayedLocationNumber</td>
-                                            <td>@play.CardNumber</td>
-                                        }
-                                        else
-                                        {
-                                            <td></td>
-                                            <td></td>
-                                        }
-                                    </tr>
+                                    if (game.Won)
+                                    {
+                                        <tr>
+                                            <td>Team @(game.WinningPlayer.Team.TeamNumber+1) Wins!</td>
+                                            <td>@game.WinningPlayer.PlayerOwner.Split('@')[0]</td>
+                                            <td>Play</td>
+                                            <td>@orderedPlays.Last().PlayedLocationNumber</td>
+                                            <td>@orderedPlays.Last().CardNumber</td>
+                                        </tr>
+                                    }
+                                    for (int i = game.Plays.Count - 1; i >= 0; i--)
+                                    {
+                                        var play = orderedPlays[i];
+                                        var player = game.Players.Where(p => p.PlayerNumber.Equals(play.PlayerNumber)).FirstOrDefault();
+                                        <tr>
+                                            <td>@play.TurnNumber</td>
+                                            <td>@player.PlayerOwner.Split('@')[0]</td>
+                                            <td>@(play.Draw ? "Draw" : "Play")</td>
+                                            @if (!play.Draw)
+                                            {
+                                                <td>@play.PlayedLocationNumber</td>
+                                                <td>@play.CardNumber</td>
+                                            }
+                                            else
+                                            {
+                                                <td></td>
+                                                <td></td>
+                                            }
+                                        </tr>
+                                    }
                                 }
                             </tbody>
                         </table>
@@ -118,7 +130,18 @@ else
                                 @{
                                     foreach (var player in game.Players)
                                     {
-                                        <li role="presentation" class="nav-item"><a style="pointer-events: none;" class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                        if (player.Team.TeamNumber == 0)
+                                        {
+                                            <li role="presentation" class="nav-item bg-danger"><a style="pointer-events: none;" class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                        }
+                                        else if (player.Team.TeamNumber == 1)
+                                        {
+                                            <li role="presentation" class="nav-item bg-warning"><a style="pointer-events: none;" class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                        }
+                                        else
+                                        {
+                                            <li role="presentation" class="nav-item bg-info"><a style="pointer-events: none;" class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                        }
                                     }
                                 }
                             </ul>
@@ -127,31 +150,52 @@ else
                 </div>
             </div>
 
-            <div class="container">
+            <div class="container" id="boardUberContainer">
                 <div class="row">
                     <div class="col-md-12">
                         <div id="boardContainer" align="center">
-                            <table id="board" align="center">
-                                @{
-                                    int position = 0;
-                                    for (int i = 0; i < 10; i++)
-                                    {
-                                        <tr>
-                                            @{
-                                                for (int j = 0; j < 10; j++)
-                                                {
-                                                    int locationNumber = GameFactory.positionOrder[position];
-
-                                                    string classString = "";
-
-                                                    <td class="@(game.Board.Where(x => x.Number.Equals(locationNumber)).FirstOrDefault().FilledBy?.Team?.TeamColor ?? classString)" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
-                                                    position++;
-                                                }
-                                            }
-                                        </tr>
-                                    }
+                            @{ 
+                                string shadowClass = "boardShadow";
+                                switch (game.CurrentPlayer.Team.TeamNumber)
+                                {
+                                    case 0:
+                                        shadowClass = "boardShadowTeam0";
+                                        break;
+                                    case 1:
+                                        shadowClass = "boardShadowTeam1";
+                                        break;
+                                    case 2:
+                                        shadowClass = "boardShadowTeam2";
+                                        break;
+                                    default:
+                                        break;
                                 }
-                            </table>
+                                if (game.Won)
+                                {
+                                    shadowClass = "boardShadow";
+                                }
+                                <table id="board" align="center" class="@shadowClass">
+                                    @{
+                                        int position = 0;
+                                        for (int i = 0; i < 10; i++)
+                                        {
+                                            <tr>
+                                                @{
+                                                    for (int j = 0; j < 10; j++)
+                                                    {
+                                                        int locationNumber = GameFactory.positionOrder[position];
+
+                                                        string classString = "";
+
+                                                        <td class="@(game.Board.Where(x => x.Number.Equals(locationNumber)).FirstOrDefault().FilledBy?.Team?.TeamColor ?? classString)" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
+                                                        position++;
+                                                    }
+                                                }
+                                            </tr>
+                                        }
+                                    }
+                                </table>
+                            }
                         </div>
                     </div>
                 </div>
