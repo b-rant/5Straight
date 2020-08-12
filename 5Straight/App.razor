@@ -13,6 +13,7 @@
     </CascadingAuthenticationState>
 </Blazorise.ThemeProvider>
 
+
 @code{
     private Theme theme = new Theme
     {
@@ -20,11 +21,15 @@
         IsGradient = true,
         ColorOptions = new ThemeColorOptions
         {
-            Primary = "#2ba60e"
+            Primary = "#31708e",
+            Danger = "#ff6666",
+            Warning = "#e3ff00",
+            Info = "#0000ee"
         },
         BackgroundOptions = new ThemeBackgroundOptions
         {
-            Primary = "#c7faf0",
+            Primary = "#8fc1e3",
+            Light = "#f7f9fb"
         }
     };
 }
