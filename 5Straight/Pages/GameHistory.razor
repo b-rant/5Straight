@@ -17,46 +17,8 @@
                 <DataGrid TItem="Game" Data="@FilteredGames" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="false" Bordered="true">
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameId)" Caption="Game ID" Editable="false"></DataGridColumn>
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameName)" Caption="Game Name" Editable="false"></DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Teams" Editable="false" Sortable="false" Filterable="false">
-                        <DisplayTemplate>
-                            @{
-                                var teams = (context as Game)?.Teams;
-                                @($"{teams.Count()}")
-                            }
-                        </DisplayTemplate>
-                    </DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.Teams)" Caption="Players" Editable="false" Sortable="false" Filterable="false">
-                        <DisplayTemplate>
-                            @{
-                                var players = (context as Game)?.Players;
-                                @($"{players.Count()}")
-                            }
-                        </DisplayTemplate>
-                    </DataGridColumn>
                     <DataGridColumn TItem="Game" Field="@nameof(Game.TurnNumber)" Caption="Turns" Editable="false" Sortable="false" Filterable="false"></DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.WinningPlayer)" Caption="Winning Player" Editable="false" Sortable="false" Filterable="false">
-                        <DisplayTemplate>
-                            @{
-                                var player = (context as Game)?.WinningPlayer;
-                                if (player != null)
-                                {
-                                    @($"{player.PlayerOwner}")
-                                }
-                            }
-                        </DisplayTemplate>
-                    </DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.WinningPlayer)" Caption="Winning Team" Editable="false" Sortable="false" Filterable="false">
-                        <DisplayTemplate>
-                            @{
-                                var player = (context as Game)?.WinningPlayer;
-                                if (player != null)
-                                {
-                                    @($"{player.Team.TeamNumber}")
-                                }
-                            }
-                        </DisplayTemplate>
-                    </DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="View Game" Editable="false" Sortable="false" Filterable="false">
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="View" Editable="false" Sortable="false" Filterable="false">
                         <DisplayTemplate>
                             @{
                                 var game = (context as Game);

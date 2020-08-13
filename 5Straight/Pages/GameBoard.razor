@@ -2,6 +2,7 @@
 
 @using _5Straight.Data
 @using _5Straight.Data.Models
+@using System.Text;
 @implements IDisposable
 @inject GameManager GameManager
 @inject NavigationManager NavigationManager
@@ -185,9 +186,24 @@ else
                                                     {
                                                         int locationNumber = GameFactory.positionOrder[position];
 
-                                                        string classString = "";
+                                                        StringBuilder classString = new StringBuilder("");
+                                                        BoardLocation location = game.Board.Where(x => x.Number.Equals(locationNumber)).FirstOrDefault();
 
-                                                        <td class="@(game.Board.Where(x => x.Number.Equals(locationNumber)).FirstOrDefault().FilledBy?.Team?.TeamColor ?? classString)" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
+                                                        Play lastPlay = game.Plays.OrderBy(x => x.TurnNumber).ToList().LastOrDefault();
+                                                        classString.Append(location.FilledBy?.Team?.TeamColor ?? "");
+                                                        if (lastPlay != null && !lastPlay.Draw && lastPlay.PlayedLocationNumber.Equals(locationNumber))
+                                                        {
+                                                            classString.Append(" boardLastPlayedLoc");
+                                                        }
+                                                        @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+                                                        {
+                                                            Player player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+                                                            if (!location.Filled && !selectedCard.Equals(-1) && game.CurrentPlayer.Equals(player) && player.Hand[selectedCard] <= locationNumber)
+                                                            {
+                                                                classString.Append(" boardPlayable");
+                                                            }
+                                                        }
+                                                        <td class="@classString.ToString()" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
                                                         position++;
                                                     }
                                                 }
@@ -368,19 +384,19 @@ else
 
         if (player == null)
         {
-            toastService.ShowError("You are not a player in this game.", "Error");
+            //toastService.ShowError("You are not a player in this game.", "Error");
             return;
         }
 
         if (game.CurrentPlayer != player)
         {
-            toastService.ShowError("It is not your turn to play.", "Error");
+            //toastService.ShowError("It is not your turn to play.", "Error");
             return;
         }
 
         if (player.Hand.Count <= selectedCard)
         {
-            toastService.ShowError("Select a valid card before you play.", "Error");
+            //toastService.ShowError("Select a valid card before you play.", "Error");
             return;
         }
 
@@ -389,7 +405,7 @@ else
         {
             toastService.ShowError(response, "");
         }
-
+        selectedCard = -1;
     }
 
     public async void MakeDraw()
@@ -407,6 +423,7 @@ else
         {
             toastService.ShowError(response, "Error");
         }
+        selectedCard = -1;
     }
 
     public void SelectCard(int cardSlot)

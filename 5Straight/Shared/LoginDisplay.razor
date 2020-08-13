@@ -1,9 +1,8 @@
 ﻿<AuthorizeView>
     <Authorized>
-        Hello, @context.User.Identity.Name!
-        <a class="btn btn-primary" href="AzureAD/Account/SignOut">Log out</a>
+        <a class="btn btn-sm btn-primary" href="AzureAD/Account/SignOut">Log out</a>
     </Authorized>
     <NotAuthorized>
-        <a class="btn btn-primary" href="AzureAD/Account/SignIn">Log in</a>
+        <a class="btn btn-sm btn-primary" href="AzureAD/Account/SignIn">Log in</a>
     </NotAuthorized>
 </AuthorizeView>
