@@ -7,17 +7,14 @@
 @inject NavigationManager NavigationManager
 @inject GameManager GameManager
 
-<Row>
+<Row> 
     <Column>
         <Card Margin="Margin.Is4.OnY">
             <CardHeader>
-                <CardTitle>Open Games</CardTitle>
+                <CardTitle Size="4" Weight="TextWeight.Bold">Open Games<Button style="float:right;" class="btn btn-sm btn-primary" Clicked="ShowNewGameModal">New Game</Button></CardTitle>
             </CardHeader>
             <CardBody>
-                <CardText Margin="Margin.Is3">Create a new game or join an open game! <Button class="btn btn-primary" Clicked="ShowNewGameModal">Create New Game</Button></CardText>
-
-                <DataGrid TItem="Game" Data="@Games.Values.Where(x => !x.GameHasStarted)" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="false" Bordered="true">
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.GameId)" Caption="Game ID" Editable="false"></DataGridColumn>
+                <DataGrid TItem="Game" Data="@Games.Values.Where(x => !x.GameHasStarted)" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="10" Striped="false" Bordered="true">
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameName)" Caption="Game Name" Editable="false"></DataGridColumn>
                     <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Teams" Editable="false" Sortable="false" Filterable="false">
                         <DisplayTemplate>
@@ -32,22 +29,22 @@
                             @{
                                 var players = (context as Game)?.Players;
                                 var openPlayers = (context as Game)?.Players.Where(x => x.PlayerOwner.Equals(""));
-                                @($"{players.Count()-openPlayers.Count()}/{players.Count()} Filled")
+                                @($"{players.Count()-openPlayers.Count()}/{players.Count()}")
                             }
                         </DisplayTemplate>
                     </DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Join Game" Editable="false" Sortable="false" Filterable="false">
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Join" Editable="false" Sortable="false" Filterable="false">
                         <DisplayTemplate>
                             @{
                                 var game = (context as Game);
                                 var openPlayers = game?.Players.Where(x => x.PlayerOwner.Equals(""));
                                 if (openPlayers.Any())
                                 {
-                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Join</a>
+                                    <a class="btn btn-sm btn-primary" href="@($"/GameBoard/{game.GameId}")">Join</a>
                                 }
                                 else
                                 {
-                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Watch</a>
+                                    <a class="btn btn-sm btn-primary" href="@($"/GameBoard/{game.GameId}")">Watch</a>
                                 }
                             }
                         </DisplayTemplate>
@@ -56,31 +53,27 @@
             </CardBody>
         </Card>
     </Column>
-</Row>
-
-<Row>
     <Column>
         <Card Margin="Margin.Is4.OnY">
             <CardHeader>
-                <CardTitle>Live Games</CardTitle>
+                <CardTitle Size="4" Weight="TextWeight.Bold">Live Games</CardTitle>
             </CardHeader>
             <CardBody>
-                <DataGrid TItem="Game" Data="@Games.Values.Where(x => x.GameHasStarted && !x.Won)" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="5" Striped="false" Bordered="true">
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.GameId)" Caption="Game ID" Editable="false"></DataGridColumn>
+                <DataGrid TItem="Game" Data="@Games.Values.Where(x => x.GameHasStarted && !x.Won)" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="10" Striped="false" Bordered="true">
                     <DataGridColumn TItem="Game" Field="@nameof(Game.GameName)" Caption="Game Name" Editable="false"></DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.TurnNumber)" Caption="Turn Number" Editable="false" Sortable="false" Filterable="false"></DataGridColumn>
-                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Join/Watch Game" Editable="false" Sortable="false" Filterable="false">
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.TurnNumber)" Caption="Turn" Editable="false" Sortable="false" Filterable="false"></DataGridColumn>
+                    <DataGridColumn TItem="Game" Field="@nameof(Game.Players)" Caption="Join/Watch" Editable="false" Sortable="false" Filterable="false">
                         <DisplayTemplate>
                             @{
                                 var game = (context as Game);
                                 var ownedPlayer = game?.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name));
                                 if (ownedPlayer.Any())
                                 {
-                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Continue Playing</a>
+                                    <a class="btn btn-sm btn-primary" href="@($"/GameBoard/{game.GameId}")">Continue</a>
                                 }
                                 else
                                 {
-                                    <a class="btn btn-primary" href="@($"/GameBoard/{game.GameId}")">Watch</a>
+                                    <a class="btn btn-sm btn-primary" href="@($"/GameBoard/{game.GameId}")">Watch</a>
                                 }
                             }
                         </DisplayTemplate>

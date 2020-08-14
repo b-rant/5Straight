@@ -7,13 +7,21 @@
 
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">5ive Straight</a>
-    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+    <LoginDisplay />
+    <button style="float:right;" class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
 </div>
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
+        <NavLink class="nav-link" >
+            <Card Margin="Margin.Is1.FromBottom" Background="Background.Light" WhiteText="false" Style="color:black">
+                <CardBody Margin="Margin.Is0" Style="padding:.5rem">
+                   Welcome @authState.User.Identity.Name.Split('@')[0]!
+                </CardBody>
+            </Card>
+        </NavLink>
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
@@ -34,8 +42,10 @@
                 {
                     var gameName = game.Value.GameName.Substring(0, game.Value.GameName.Length > 20 ? 20 : game.Value.GameName.Length);
                     gameName = gameName.Length < game.Value.GameName.Length ? $"{gameName}..." : gameName;
+                    string cardClass = "";
+                    if (game.Value.GameHasStarted && game.Value.CurrentPlayer.PlayerOwner.Equals(authState.User.Identity.Name)) { cardClass = "shadowTurnIndicator"; }
                     <NavLink class="nav-link" href="@($"/GameBoard/{game.Value.GameId}")">
-                        <Card Margin="Margin.Is1.FromBottom" Background="Background.Light" WhiteText="false" Style="color:black">
+                        <Card Margin="Margin.Is1.FromBottom" Background="Background.Light" WhiteText="false" Style="color:black" Class="@cardClass">
                             <CardBody Margin="Margin.Is0" Style="padding:.5rem">
                                 <CardTitle Size="7">@gameName</CardTitle>
                                 <CardText>
