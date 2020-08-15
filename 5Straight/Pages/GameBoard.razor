@@ -292,7 +292,7 @@ else
                                      var lastPlay = game.Plays.OrderBy(x => x.TurnNumber).ToList().Last();
                                      <TableRow>
                                          <TableRowCell>@(game.WinningPlayer.Team.TeamNumber+1)</TableRowCell>
-                                         <TableRowCell>@game.WinningPlayer.PlayerOwner</TableRowCell>
+                                         <TableRowCell>@game.WinningPlayer.PlayerOwner.Split('@')[0]</TableRowCell>
                                          <TableRowCell>@lastPlay.CardNumber in the @lastPlay.PlayedLocationNumber</TableRowCell>
                                      </TableRow>
                                  }
