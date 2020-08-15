@@ -80,7 +80,6 @@ namespace _5Straight.Data
             game.SaveGameDelegate = SaveGame;
             Games.Add(game.PartitionKey, game);
 
-            UpdateEveryone();
             return game;
         }
 
@@ -100,20 +99,34 @@ namespace _5Straight.Data
 
         public bool UserSelectPlayerSlot(string gamePartitionKey, int playerNumber, string userName)
         {
-            var success = Games[gamePartitionKey].OwnPlayerSlot(playerNumber, userName);
-            UpdateEveryone();
-            if (Games[gamePartitionKey].ValidateAndStartGame())
+            try
             {
-                RunGameAi(gamePartitionKey);
+                var success = Games[gamePartitionKey].OwnPlayerSlot(playerNumber, userName);
+                UpdateEveryone();
+                if (Games[gamePartitionKey].ValidateAndStartGame())
+                {
+                    RunGameAi(gamePartitionKey);
+                }
+                return success;
             }
-            return success;
+            catch
+            {
+                return false;
+            }
         }
 
         public bool UserDeSelectPlayerSlot(string gamePartitionKey, int playerNumber)
         {
-            var success = Games[gamePartitionKey].RemovePlayerSlot(playerNumber);
-            UpdateEveryone();
-            return success;
+            try
+            {
+                var success = Games[gamePartitionKey].RemovePlayerSlot(playerNumber);
+                UpdateEveryone();
+                return success;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public void AiSelectPlayerSlot(string gamePartitionKey, int playerNumber)

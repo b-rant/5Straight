@@ -47,7 +47,7 @@ namespace _5Straight.Data.Proxies
 
 
                 //Plays
-                var playBatches = game.Plays.Batch(80);
+                var playBatches = game.Plays.Batch(100);
                 foreach (var batch in playBatches)
                 {
                     TableBatchOperation savePlays = new TableBatchOperation();
@@ -172,7 +172,7 @@ namespace _5Straight.Data.Proxies
                 game.CurrentPlayer = game.Players[game.TurnNumber % game.Players.Count];
 
                 //Winning Player
-                if (game.Won == true)
+                if (game.Won == true && !game.DeadCardDraw)
                 {
                     game.WinningPlayer =  game.Players[game.Plays.OrderByDescending(x => x.TurnNumber).ToList().Last().PlayerNumber];
                 }
