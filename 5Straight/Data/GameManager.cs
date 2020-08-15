@@ -102,6 +102,17 @@ namespace _5Straight.Data
         {
             var success = Games[gamePartitionKey].OwnPlayerSlot(playerNumber, userName);
             UpdateEveryone();
+            if (Games[gamePartitionKey].ValidateAndStartGame())
+            {
+                RunGameAi(gamePartitionKey);
+            }
+            return success;
+        }
+
+        public bool UserDeSelectPlayerSlot(string gamePartitionKey, int playerNumber)
+        {
+            var success = Games[gamePartitionKey].RemovePlayerSlot(playerNumber);
+            UpdateEveryone();
             return success;
         }
 
@@ -109,6 +120,10 @@ namespace _5Straight.Data
         {
             Games[gamePartitionKey].OwnPlayerSlotForAi(playerNumber);
             UpdateEveryone();
+            if (Games[gamePartitionKey].ValidateAndStartGame())
+            {
+                RunGameAi(gamePartitionKey);
+            }
         }
 
         public void AiDeselectPlayerSlot(string gamePartitionKey, int playerNumber)
@@ -130,7 +145,17 @@ namespace _5Straight.Data
             }
 
             UpdateEveryone();
+            RunGameAi(gamePartitionKey);
             return response;
+        }
+
+        private async void RunGameAi(string gamePartitionKey)
+        {
+            while(!Games[gamePartitionKey].Won && Games[gamePartitionKey].CurrentPlayer.Npc != null)
+            {
+                await Games[gamePartitionKey].RunAI();
+                UpdateEveryone();
+            }
         }
 
         #endregion

@@ -1,6 +1,7 @@
 ﻿using _5Straight.Data.GameAI;
 using _5Straight.Data.Models;
 using Microsoft.Azure.Cosmos.Table;
+using MoreLinq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,17 +47,19 @@ namespace _5Straight.Data.Proxies
 
 
                 //Plays
-                TableBatchOperation savePlays = new TableBatchOperation();
-
-                foreach (Play p in game.Plays)
+                var playBatches = game.Plays.Batch(80);
+                foreach (var batch in playBatches)
                 {
-                    p.PartitionKey = game.PartitionKey;
-                    p.RowKey = p.TurnNumber.ToString();
-                    savePlays.InsertOrReplace(p);
+                    TableBatchOperation savePlays = new TableBatchOperation();
+                    foreach (Play p in batch)
+                    {
+                        p.PartitionKey = game.PartitionKey;
+                        p.RowKey = p.TurnNumber.ToString();
+                        savePlays.InsertOrReplace(p);
+                    }
+
+                    TableBatchResult savePlaysResult = tableService.ExecuteBatch(savePlays, "Plays");
                 }
-
-                TableBatchResult savePlaysResult = tableService.ExecuteBatch(savePlays, "Plays");
-
 
                 //Teams
                 TableBatchOperation saveTeams = new TableBatchOperation();

@@ -14,7 +14,7 @@ namespace _5Straight.Data.GameAI
             Chromosome = chromosome;
         }
 
-        public Play CalculatePlay(Dictionary<int, double> rankedBoardOptions, Player player)
+        public Play CalculatePlay(Dictionary<int, double> rankedBoardOptions, Player player, bool deckHasCards)
         {
             Play playDecision = new Play();
 
@@ -60,7 +60,7 @@ namespace _5Straight.Data.GameAI
 
             // Determine Play
             var topPlayOption = weightedPlayOptions.OrderByDescending(x => x.Value).FirstOrDefault();
-            if (topPlayOption.Value >= drawValue || player.Hand.Count == Configuration._HandSize)
+            if (topPlayOption.Value >= drawValue || player.Hand.Count == Configuration._HandSize || !deckHasCards)
             {
                 playDecision.Draw = false;
                 playDecision.PlayedLocationNumber = topPlayOption.Key;

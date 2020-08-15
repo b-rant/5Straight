@@ -31,10 +31,7 @@
                                             <small>player @(player.PlayerNumber + 1)</small>
                                         </div>
                                     </a>
-                                    if (game.Teams.Count == 2)
-                                    {
-                                        <button @onclick="() => SetPlayerAsAi(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Add AI</button>
-                                    }
+                                    <button @onclick="() => SetPlayerAsAi(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Add AI</button>
                                 }
                                 else
                                 {
@@ -44,7 +41,11 @@
                                             <small class="text-muted">player @(player.PlayerNumber + 1)</small>
                                         </div>
                                     </a>
-                                    if (game.Teams.Count == 2 && player.Npc != null)
+                                    if (player.PlayerOwner.Equals(authState.User.Identity.Name))
+                                    {
+                                        <button @onclick="() => DeSelectPlayerSlot(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Leave Player Slot</button>
+                                    }
+                                    if (player.Npc != null)
                                     {
                                         <button @onclick="() => RemovePlayerAsAi(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Remove AI</button>
                                     }
@@ -129,19 +130,19 @@ else
                         <div class="nav-center">
                             <ul id="playerTabs" class="nav nav-pills" role="tablist">
                                 @{
-                                    foreach (var player in game.Players)
+                                    foreach (var p in game.Players)
                                     {
-                                        if (player.Team.TeamNumber == 0)
+                                        if (p.Team.TeamNumber == 0)
                                         {
-                                            <li role="presentation" class="nav-item bg-danger"><a style="pointer-events: none;" class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam0" : "")">@(p.PlayerOwner.Split('@')[0])</a></li>
                                         }
-                                        else if (player.Team.TeamNumber == 1)
+                                        else if (p.Team.TeamNumber == 1)
                                         {
-                                            <li role="presentation" class="nav-item bg-warning"><a style="pointer-events: none;" class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam1" : "")">@(p.PlayerOwner.Split('@')[0])</a></li>
                                         }
                                         else
                                         {
-                                            <li role="presentation" class="nav-item bg-info"><a style="pointer-events: none;" class="nav-link @(game.CurrentPlayer.Equals(player) ? "active" : "")">@(player.PlayerOwner.Split('@')[0])</a></li>
+                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam2" : "")">@(p.PlayerOwner.Split('@')[0])</a></li>
                                         }
                                     }
                                 }
@@ -155,25 +156,16 @@ else
                 <div class="row">
                     <div class="col-md-12">
                         <div id="boardContainer" align="center">
-                            @{ 
+                            @{
+                                
                                 string shadowClass = "boardShadow";
-                                switch (game.CurrentPlayer.Team.TeamNumber)
+                                @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
                                 {
-                                    case 0:
-                                        shadowClass = "boardShadowTeam0";
-                                        break;
-                                    case 1:
-                                        shadowClass = "boardShadowTeam1";
-                                        break;
-                                    case 2:
-                                        shadowClass = "boardShadowTeam2";
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                if (game.Won)
-                                {
-                                    shadowClass = "boardShadow";
+                                    var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+                                    if (game.CurrentPlayer.Equals(player) && !game.Won)
+                                    {
+                                        shadowClass = "boardShadowPlayerTurn";
+                                    }
                                 }
                                 <table id="board" align="center" class="@shadowClass">
                                     @{
@@ -197,10 +189,10 @@ else
                                                         }
                                                         @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
                                                         {
-                                                            Player player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+                                                            var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
                                                             if (!location.Filled && !selectedCard.Equals(-1) && game.CurrentPlayer.Equals(player) && player.Hand[selectedCard] <= locationNumber)
                                                             {
-                                                                classString.Append(" boardPlayable");
+                                                                classString.Append($" boardPlayable playerTeam{player.Team.TeamNumber}");
                                                             }
                                                         }
                                                         <td class="@classString.ToString()" @onclick="() => MakePlay(locationNumber)" id="@locationNumber">@locationNumber</td>
@@ -216,45 +208,52 @@ else
                     </div>
                 </div>
             </div>
-            @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+            @if (!game.Won && game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
             {
                 var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
-                <div class="container">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div id="cardContainer" align="center">
-                                @if (game.CurrentPlayer.Equals(player) && !game.Won)
-                                {
-                                    @for (int i = 0; i < 4; i++)
+                string cardShadowClass = "boardShadow";
+                if (game.CurrentPlayer.Equals(player))
+                {
+                    cardShadowClass = "boardShadowPlayerTurn";
+                }
+                if (player.Hand.Any() || game.CurrentPlayer.Equals(player))
+                {
+                    <Row Margin="Margin.IsAuto">
+                        <Column ColumnSize="ColumnSize.IsAuto" Margin="Margin.IsAuto">
+                            <Card Background="Background.Light" WhiteText="false" Style="color:black" Class="@cardShadowClass">
+                                <CardBody Margin="Margin.Is0" Style="">
+                                    @if (game.CurrentPlayer.Equals(player))
                                     {
-                                        @if (player.Hand.Count >= i + 1)
+                                        @for (int i = 0; i < 4; i++)
                                         {
-                                            int card = i;
-                                            <button type="button" class="btn btn-outline-primary btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(player.Hand[i])</button>
+                                            @if (player.Hand.Count >= i + 1)
+                                            {
+                                                int card = i;
+                                                <button type="button" class="btn btn-outline-dark btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(player.Hand[i])</button>
+                                            }
+                                        }
+                                        @if (player.Hand.Count <= 3 && game.Deck.Any())
+                                        {
+                                            <button type="button" class="btn btn-outline-success btn-lg" @onclick="() => MakeDraw()">Draw Card</button>
                                         }
                                     }
-                                    @if (player.Hand.Count <= 3)
+                                    else
                                     {
-                                        <button type="button" class="btn btn-outline-success btn-lg" @onclick="() => MakeDraw()">Draw Card</button>
-                                    }
-                                }
-                                else
-                                {
-                                    @for (int i = 0; i < 4; i++)
-                                    {
-                                        @if (player.Hand.Count >= i + 1)
+                                        @for (int i = 0; i < 4; i++)
                                         {
-                                            int card = i;
-                                            <button type="button" class="btn btn-outline-dark btn-lg disabled">@(player.Hand[i])</button>
+                                            @if (player.Hand.Count >= i + 1)
+                                            {
+                                                int card = i;
+                                                <button type="button" class="btn btn-outline-dark btn-lg disabled">@(player.Hand[i])</button>
+                                            }
                                         }
                                     }
-                                }
-
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
+                                </CardBody>
+                            </Card>
+                        </Column>
+                    </Row>
+                }
+                
             }
             else
             {
@@ -359,6 +358,14 @@ else
         }
     }
 
+    public async void DeSelectPlayerSlot(int playerId)
+    {
+        if (GameManager.UserDeSelectPlayerSlot(gameId, playerId))
+        {
+            playerNumber = -1;
+        }
+    }
+
     public void SetPlayerAsAi(int playerId)
     {
         GameManager.AiSelectPlayerSlot(gameId, playerId);
@@ -373,7 +380,7 @@ else
     [Parameter]
     public string gameId { get; set; }
     public Game game;
-    int selectedCard;
+    int selectedCard = -1;
     int playerNumber = -1;
     int mostRecentShowedPlay;
     bool showGameInfo;
@@ -394,7 +401,7 @@ else
             return;
         }
 
-        if (player.Hand.Count <= selectedCard)
+        if (selectedCard == -1 || player.Hand.Count <= selectedCard)
         {
             //toastService.ShowError("Select a valid card before you play.", "Error");
             return;
@@ -428,7 +435,14 @@ else
 
     public void SelectCard(int cardSlot)
     {
-        selectedCard = cardSlot;
+        if (selectedCard == cardSlot)
+        {
+            selectedCard = -1;
+        }
+        else
+        {
+            selectedCard = cardSlot;
+        }
     }
 
     public void SwitchBoardView()

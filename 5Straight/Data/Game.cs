@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 
 namespace _5Straight.Data
@@ -109,7 +110,18 @@ namespace _5Straight.Data
                     player.PlayerOwner = "";
                 }
                 playerToOwn.PlayerOwner = userName;
-                ValidateAndStartGame();
+                UpdateEveryone();
+                return true;
+            }
+            return false;
+        }
+
+        public bool RemovePlayerSlot(int playerNumber)
+        {
+            var playerToOwn = Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
+            if (!string.IsNullOrWhiteSpace(playerToOwn.PlayerOwner))
+            {
+                playerToOwn.PlayerOwner = "";
                 UpdateEveryone();
                 return true;
             }
@@ -123,7 +135,6 @@ namespace _5Straight.Data
             {
                 playerToOwn.PlayerOwner = AiPlayerFactory.GetRandomNameNoDuplicates(Players);
                 playerToOwn.Npc = AiPlayerFactory.BuildAi(playerToOwn, this);
-                ValidateAndStartGame();
                 UpdateEveryone();
             }
         }
@@ -214,7 +225,7 @@ namespace _5Straight.Data
             return "";
         }
 
-        public async void RunAI()
+        public async Task RunAI()
         {
             if (Won)
             {
@@ -225,6 +236,14 @@ namespace _5Straight.Data
             if (CurrentPlayer.Npc != null)
             {
                 var play = await CurrentPlayer.Npc.DeterminePlay();
+
+                if (play == null)
+                {
+                    // AI has no valid plays to make, game Draw
+                    Won = true;
+                    //TODO: Game should be over with draw not win, need a draw state instead of win only state...
+                    WinningPlayer = Players[0];
+                }
 
                 if (play.Draw)
                 {
@@ -237,10 +256,7 @@ namespace _5Straight.Data
             }
         }
 
-
-        // Private Functions
-
-        private bool ValidateAndStartGame()
+        public bool ValidateAndStartGame()
         {
             if (Players.Where(x => string.IsNullOrWhiteSpace(x.PlayerOwner)).Any())
             {
@@ -249,10 +265,13 @@ namespace _5Straight.Data
             else
             {
                 GameHasStarted = true;
-                RunAI();
+                UpdateEveryone();
                 return true;
             }
         }
+
+
+        // Private Functions
 
         private int DrawCard()
         {
@@ -275,7 +294,6 @@ namespace _5Straight.Data
         {
             TurnNumber++;
             CurrentPlayer = Players[TurnNumber % Players.Count];
-            RunAI();
             UpdateEveryone();
         }
 

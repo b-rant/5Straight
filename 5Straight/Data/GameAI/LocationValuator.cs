@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace _5Straight.Data.GameAI
 {
@@ -15,7 +14,7 @@ namespace _5Straight.Data.GameAI
             Chromosome = chromosome;
         }
 
-        public double CalculateLocationValue(List<BoardLocation> board, int location, int playerNum)
+        public double CalculateLocationValue(List<BoardLocation> board, int location, int playerNum, int numTeams)
         {
             // Determine rows around location
             List<int> NW_SE = GetPrePlayRowValues(board, location, 0, new List<int>());
@@ -36,10 +35,10 @@ namespace _5Straight.Data.GameAI
             ConvertLocationsToValues(board, W_E);
 
             // Calculate each row value
-            var sum = CalculateCombinedPlayerRowValue(NW_SE, NW_SE_index, playerNum)
-                + CalculateCombinedPlayerRowValue(N_S, N_S_index, playerNum)
-                + CalculateCombinedPlayerRowValue(NE_SW, NE_SW_Index, playerNum)
-                + CalculateCombinedPlayerRowValue(W_E, W_E_Index, playerNum);
+            var sum = CalculateCombinedPlayerRowValue(NW_SE, NW_SE_index, playerNum, numTeams)
+                + CalculateCombinedPlayerRowValue(N_S, N_S_index, playerNum, numTeams)
+                + CalculateCombinedPlayerRowValue(NE_SW, NE_SW_Index, playerNum, numTeams)
+                + CalculateCombinedPlayerRowValue(W_E, W_E_Index, playerNum, numTeams);
 
             return sum;
         }
@@ -84,39 +83,86 @@ namespace _5Straight.Data.GameAI
         }
 
 
-        public double CalculateCombinedPlayerRowValue(List<int> prePlayRowValues, int locationIndex, int playerNum)
+        public double CalculateCombinedPlayerRowValue(List<int> prePlayRowValues, int locationIndex, int playerNum, int numTeams)
         {
-            // Create PostPlayRows
-            List<int> postPlayRowValuesPlayer1 = new List<int>();
-            List<int> postPlayRowValuesPlayer2 = new List<int>();
+            double weightedRowValue;
 
-            for (int i = 0; i < prePlayRowValues.Count; i++)
+            if (numTeams == 2)
             {
-                if (i == locationIndex)
+                // Create PostPlayRows
+                List<int> postPlayRowValuesPlayer1 = new List<int>();
+                List<int> postPlayRowValuesPlayer2 = new List<int>();
+
+                for (int i = 0; i < prePlayRowValues.Count; i++)
                 {
-                    postPlayRowValuesPlayer1.Add(0);
-                    postPlayRowValuesPlayer2.Add(1);
+                    if (i == locationIndex)
+                    {
+                        postPlayRowValuesPlayer1.Add(0);
+                        postPlayRowValuesPlayer2.Add(1);
+                    }
+                    else
+                    {
+                        postPlayRowValuesPlayer1.Add(prePlayRowValues[i]);
+                        postPlayRowValuesPlayer2.Add(prePlayRowValues[i]);
+                    }
+                }
+
+                // Implement aggression and defensive multiplyers
+                double player1Value = CalculatePlayerRowValue(prePlayRowValues, postPlayRowValuesPlayer1, 0);
+                double player2Value = CalculatePlayerRowValue(prePlayRowValues, postPlayRowValuesPlayer2, 1);
+
+
+
+                if (playerNum == 0)
+                {
+                    weightedRowValue = player1Value * Chromosome.OffensiveMultiplyer + player2Value * Chromosome.DefensiveMultiplyer;
                 }
                 else
                 {
-                    postPlayRowValuesPlayer1.Add(prePlayRowValues[i]);
-                    postPlayRowValuesPlayer2.Add(prePlayRowValues[i]);
+                    weightedRowValue = player2Value * Chromosome.OffensiveMultiplyer + player1Value * Chromosome.DefensiveMultiplyer;
                 }
-            }
-
-            // Implement aggression and defensive multiplyers
-            double player1Value = CalculatePlayerRowValue(prePlayRowValues, postPlayRowValuesPlayer1, 0);
-            double player2Value = CalculatePlayerRowValue(prePlayRowValues, postPlayRowValuesPlayer2, 1);
-
-            double weightedRowValue;
-
-            if(playerNum == 0)
-            {
-                weightedRowValue = player1Value * Chromosome.OffensiveMultiplyer + player2Value * Chromosome.DefensiveMultiplyer;
             }
             else
             {
-                weightedRowValue = player2Value * Chromosome.OffensiveMultiplyer + player1Value * Chromosome.DefensiveMultiplyer;
+                // Create PostPlayRows
+                List<int> postPlayRowValuesPlayer1 = new List<int>();
+                List<int> postPlayRowValuesPlayer2 = new List<int>();
+                List<int> postPlayRowValuesPlayer3 = new List<int>();
+
+                for (int i = 0; i < prePlayRowValues.Count; i++)
+                {
+                    if (i == locationIndex)
+                    {
+                        postPlayRowValuesPlayer1.Add(0);
+                        postPlayRowValuesPlayer2.Add(1);
+                        postPlayRowValuesPlayer3.Add(2);
+                    }
+                    else
+                    {
+                        postPlayRowValuesPlayer1.Add(prePlayRowValues[i]);
+                        postPlayRowValuesPlayer2.Add(prePlayRowValues[i]);
+                        postPlayRowValuesPlayer3.Add(prePlayRowValues[i]);
+                    }
+                }
+
+                // Implement aggression and defensive multiplyers
+                double player1Value = CalculatePlayerRowValue(prePlayRowValues, postPlayRowValuesPlayer1, 0);
+                double player2Value = CalculatePlayerRowValue(prePlayRowValues, postPlayRowValuesPlayer2, 1);
+                double player3Value = CalculatePlayerRowValue(prePlayRowValues, postPlayRowValuesPlayer3, 2);
+
+
+                if (playerNum == 0)
+                {
+                    weightedRowValue = player1Value * Chromosome.OffensiveMultiplyer + Math.Max(player2Value * Chromosome.DefensiveMultiplyer, player3Value * Chromosome.DefensiveMultiplyer);
+                }
+                else if (playerNum == 1)
+                {
+                    weightedRowValue = player2Value * Chromosome.OffensiveMultiplyer + Math.Max(player3Value * Chromosome.DefensiveMultiplyer, player1Value * Chromosome.DefensiveMultiplyer);
+                }
+                else
+                {
+                    weightedRowValue = player3Value * Chromosome.OffensiveMultiplyer + Math.Max(player2Value * Chromosome.DefensiveMultiplyer, player1Value * Chromosome.DefensiveMultiplyer);
+                }
             }
 
             return weightedRowValue;
@@ -145,7 +191,7 @@ namespace _5Straight.Data.GameAI
             while (rowValues.Count >= 5)
             {
                 var chunk = rowValues.Take(5);
-                if (!chunk.Contains((playerNum + 1) % 2))
+                if (!chunk.Contains((playerNum + 1) % 3) && !chunk.Contains((playerNum + 2) % 3))
                 {
                     chunkScores.Add(chunk.Where(x => x == playerNum).Count());
                 }

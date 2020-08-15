@@ -55,11 +55,16 @@ namespace _5Straight.Data.GameAI
             Dictionary<int, double> boardValueResults = new Dictionary<int, double>();
             foreach (var loc in playableLocations)
             {
-                boardValueResults.Add(loc.Number, LocationValuator.CalculateLocationValue(Game.Board, loc.Number, Player.PlayerNumber));
+                boardValueResults.Add(loc.Number, LocationValuator.CalculateLocationValue(Game.Board, loc.Number, Player.PlayerNumber, Game.Teams.Count));
             }
 
             // Determine Best Play with the PlayValuator
-            var playToMake = PlayValuator.CalculatePlay(boardValueResults, Player);
+            var playToMake = PlayValuator.CalculatePlay(boardValueResults, Player, Game.Deck.Any());
+
+            if (playToMake.Draw && !Game.Deck.Any())
+            {
+                return null;
+            }
 
             // Add some delay so the AI is not too fast
             await Task.Delay(RandomGen.Next(500,2500));
