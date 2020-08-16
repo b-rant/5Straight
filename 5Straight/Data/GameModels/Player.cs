@@ -9,7 +9,9 @@ namespace _5Straight.Data.Models
     {
         public int PlayerNumber { get; set; }
 
-        public string PlayerOwner { get; set; }
+        public string PlayerId { get; set; }
+
+        public string PlayerName { get; set; }
 
         public bool? IsAI { get; set; }
 

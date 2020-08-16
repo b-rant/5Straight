@@ -90,7 +90,7 @@ namespace _5Straight.Data.GameAI
             bool isUnique = false;
             do
             {
-                if (!players.Where(x => x.PlayerOwner.Equals(name)).Any())
+                if (!players.Where(x => x.PlayerName != null && x.PlayerName.Equals(name)).Any())
                 {
                     isUnique = true;
                     break;

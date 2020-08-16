@@ -3,6 +3,7 @@
 @using _5Straight.Data
 @using _5Straight.Data.Models
 @using System.Text;
+@using System.Security.Claims; 
 @implements IDisposable
 @inject GameManager GameManager
 @inject NavigationManager NavigationManager
@@ -23,9 +24,9 @@
                         <div id="lobby-team-@team.TeamNumber" class="list-group ">
                             @foreach (var player in team.Players)
                             {
-                                if (string.IsNullOrWhiteSpace(player.PlayerOwner))
+                                if (string.IsNullOrWhiteSpace(player.PlayerId))
                                 {
-                                    <a @onclick="() => SelectPlayerSlot(player.PlayerNumber, authState.User.Identity.Name)" class="list-group-item list-group-item-action">
+                                    <a @onclick="() => SelectPlayerSlot(player.PlayerNumber, authState.User.FindFirstValue(ClaimTypes.NameIdentifier), authState.User.FindFirstValue(ClaimTypes.GivenName))" class="list-group-item list-group-item-action">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h5 class="mb-1">Empty Slot</h5>
                                             <small>player @(player.PlayerNumber + 1)</small>
@@ -35,13 +36,13 @@
                                 }
                                 else
                                 {
-                                    <a class="list-group-item list-group-item-action disabled @((!string.IsNullOrWhiteSpace(player.PlayerOwner) && player.PlayerOwner.Equals(authState.User.Identity.Name)) ? "lobby-owned" : "lobby-filled")" aria-disabled="true">
+                                    <a class="list-group-item list-group-item-action disabled @((!string.IsNullOrWhiteSpace(player.PlayerId) && player.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))) ? "lobby-owned" : "lobby-filled")" aria-disabled="true">
                                         <div class="d-flex w-100 justify-content-between">
-                                            <h5 class="mb-1">@(player.PlayerOwner.Split('@')[0])</h5>
+                                            <h5 class="mb-1">@(player.PlayerName)</h5>
                                             <small class="text-muted">player @(player.PlayerNumber + 1)</small>
                                         </div>
                                     </a>
-                                    if (player.PlayerOwner.Equals(authState.User.Identity.Name))
+                                    if (player.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier)))
                                     {
                                         <button @onclick="() => DeSelectPlayerSlot(player.PlayerNumber)" type="button" class="btn btn-outline-dark">Leave Player Slot</button>
                                     }
@@ -86,7 +87,7 @@ else
                                     {
                                         <tr>
                                             <td>Team @(game.WinningPlayer.Team.TeamNumber+1) Wins!</td>
-                                            <td>@game.WinningPlayer.PlayerOwner.Split('@')[0]</td>
+                                            <td>@game.WinningPlayer.PlayerName</td>
                                             <td>Play</td>
                                             <td>@orderedPlays.Last().PlayedLocationNumber</td>
                                             <td>@orderedPlays.Last().CardNumber</td>
@@ -104,7 +105,7 @@ else
                                         var player = game.Players.Where(p => p.PlayerNumber.Equals(play.PlayerNumber)).FirstOrDefault();
                                         <tr>
                                             <td>@play.TurnNumber</td>
-                                            <td>@player.PlayerOwner.Split('@')[0]</td>
+                                            <td>@player.PlayerName</td>
                                             <td>@(play.Draw ? "Draw" : "Play")</td>
                                             @if (!play.Draw)
                                             {
@@ -140,15 +141,15 @@ else
                                     {
                                         if (p.Team.TeamNumber == 0)
                                         {
-                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam0" : "")">@(p.PlayerOwner.Split('@')[0])</a></li>
+                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam0" : "")">@(p.PlayerName)</a></li>
                                         }
                                         else if (p.Team.TeamNumber == 1)
                                         {
-                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam1" : "")">@(p.PlayerOwner.Split('@')[0])</a></li>
+                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam1" : "")">@(p.PlayerName)</a></li>
                                         }
                                         else
                                         {
-                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam2" : "")">@(p.PlayerOwner.Split('@')[0])</a></li>
+                                            <li role="presentation" class="nav-item "><a style="pointer-events: none;" class="nav-link btn-outline-dark @(game.CurrentPlayer.Equals(p) ? "active boardShadowTeam2" : "")">@(p.PlayerName)</a></li>
                                         }
                                     }
                                 }
@@ -165,9 +166,9 @@ else
                             @{
                                 
                                 string shadowClass = "boardShadow";
-                                @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+                                @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).Any())
                                 {
-                                    var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+                                    var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).First();
                                     if (game.CurrentPlayer.Equals(player) && !game.Won)
                                     {
                                         shadowClass = "boardShadowPlayerTurn";
@@ -193,9 +194,9 @@ else
                                                         {
                                                             classString.Append(" boardLastPlayedLoc");
                                                         }
-                                                        @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+                                                        @if (game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).Any())
                                                         {
-                                                            var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+                                                            var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).First();
                                                             if (!location.Filled && !selectedCard.Equals(-1) && game.CurrentPlayer.Equals(player) && player.Hand[selectedCard] <= locationNumber)
                                                             {
                                                                 classString.Append($" boardPlayable playerTeam{player.Team.TeamNumber}");
@@ -214,9 +215,9 @@ else
                     </div>
                 </div>
             </div>
-            @if (!game.Won && game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+            @if (!game.Won && game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).Any())
             {
-                var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).First();
+                var player = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).First();
                 string cardShadowClass = "boardShadow";
                 if (game.CurrentPlayer.Equals(player))
                 {
@@ -292,7 +293,7 @@ else
                                      var lastPlay = game.Plays.OrderBy(x => x.TurnNumber).ToList().Last();
                                      <TableRow>
                                          <TableRowCell>@(game.WinningPlayer.Team.TeamNumber+1)</TableRowCell>
-                                         <TableRowCell>@game.WinningPlayer.PlayerOwner.Split('@')[0]</TableRowCell>
+                                         <TableRowCell>@game.WinningPlayer.PlayerName</TableRowCell>
                                          <TableRowCell>@lastPlay.CardNumber in the @lastPlay.PlayedLocationNumber</TableRowCell>
                                      </TableRow>
                                  }
@@ -310,7 +311,7 @@ else
                                 @foreach (var player in game.Players)
 	                            {
 		                            <TableRow>
-                                        <TableRowCell>@player.PlayerOwner</TableRowCell>
+                                        <TableRowCell>@player.PlayerId</TableRowCell>
                                         <TableRowCell>
                                             @foreach (var card in player.Hand)
                                             {
@@ -354,7 +355,7 @@ else
 
     public async Task OnNotify()
     {
-        var players = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name));
+        var players = game.Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier)));
         Player player = players.Any() ? players.First() : null;
         await InvokeAsync(() => StateHasChanged());
         var latestPlays = game.GetMostRecentPlays(mostRecentShowedPlay);
@@ -364,11 +365,11 @@ else
             {
                 if (play.Draw)
                 {
-                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} drew a card", "Draw");
+                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerName} drew a card", "Draw");
                 }
                 else
                 {
-                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} played the {play.CardNumber} in the {play.PlayedLocationNumber}", "Play");
+                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerName} played the {play.CardNumber} in the {play.PlayedLocationNumber}", "Play");
                 }
             }
             else if (play.PlayerNumber.Equals(player.PlayerNumber))
@@ -386,11 +387,11 @@ else
             {
                 if (play.Draw)
                 {
-                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} drew a card", "Draw");
+                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerName} drew a card", "Draw");
                 }
                 else
                 {
-                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerOwner.Split('@')[0]} played the {play.CardNumber} in the {play.PlayedLocationNumber}", "Play");
+                    toastService.ShowInfo($"{game.Players[play.PlayerNumber].PlayerName} played the {play.CardNumber} in the {play.PlayedLocationNumber}", "Play");
                 }
             }
             mostRecentShowedPlay++;
@@ -419,9 +420,9 @@ else
 
     // Game Lobby
 
-    public async void SelectPlayerSlot(int playerId, string userName)
+    public async void SelectPlayerSlot(int playerId, string userId, string userGivenName)
     {
-        if (GameManager.UserSelectPlayerSlot(gameId, playerId, userName))
+        if (GameManager.UserSelectPlayerSlot(gameId, playerId, userId, userGivenName))
         {
             playerNumber = playerId;
         }
@@ -456,7 +457,7 @@ else
 
     public async void MakePlay(int locationNumber)
     {
-        var player = game?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).FirstOrDefault();
+        var player = game?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).FirstOrDefault();
 
         if (player == null)
         {
@@ -486,7 +487,7 @@ else
 
     public async void MakeDraw()
     {
-        var player = game?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(authState.User.Identity.Name)).FirstOrDefault();
+        var player = game?.Players?.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).FirstOrDefault();
 
         if (player == null)
         {

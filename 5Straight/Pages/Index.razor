@@ -2,6 +2,7 @@
 @using _5Straight.Data
 @using Blazorise
 @using Blazorise.DataGrid
+@using System.Security.Claims
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject GameManager GameManager
@@ -27,7 +28,7 @@
                         <DisplayTemplate>
                             @{
                                 var players = (context as Game)?.Players;
-                                var openPlayers = (context as Game)?.Players.Where(x => x.PlayerOwner.Equals(""));
+                                var openPlayers = (context as Game)?.Players.Where(x => x.PlayerId.Equals(""));
                                 @($"{players.Count()-openPlayers.Count()}/{players.Count()}")
                             }
                         </DisplayTemplate>
@@ -36,7 +37,7 @@
                         <DisplayTemplate>
                             @{
                                 var game = (context as Game);
-                                var openPlayers = game?.Players.Where(x => x.PlayerOwner.Equals(""));
+                                var openPlayers = game?.Players.Where(x => x.PlayerId.Equals(""));
                                 if (openPlayers.Any())
                                 {
                                     <a class="btn btn-sm btn-primary" href="@($"/GameBoard/{game.GameId}")">Join</a>
@@ -65,7 +66,7 @@
                         <DisplayTemplate>
                             @{
                                 var game = (context as Game);
-                                var ownedPlayer = game?.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name));
+                                var ownedPlayer = game?.Players.Where(x => x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier)));
                                 if (ownedPlayer.Any())
                                 {
                                     <a class="btn btn-sm btn-primary" href="@($"/GameBoard/{game.GameId}")">Continue</a>

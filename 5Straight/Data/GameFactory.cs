@@ -71,7 +71,7 @@ namespace _5Straight.Data
                     //Set Player number
                     PlayerNumber = i,
                     Hand = new List<int>(),
-                    PlayerOwner = ""
+                    PlayerId = ""
                 };
                 players.Add(tempPlayer);
             };

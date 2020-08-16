@@ -102,16 +102,17 @@ namespace _5Straight.Data
 
         // Public Functions
 
-        public bool OwnPlayerSlot(int playerNumber, string userName)
+        public bool OwnPlayerSlot(int playerNumber, string userId, string userGivenName)
         {
             var playerToOwn = Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
-            if (string.IsNullOrWhiteSpace(playerToOwn.PlayerOwner))
+            if (string.IsNullOrWhiteSpace(playerToOwn.PlayerId))
             {
-                foreach (var player in Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerOwner) && x.PlayerOwner.Equals(userName)))
+                foreach (var player in Players.Where(x => !string.IsNullOrWhiteSpace(x.PlayerId) && x.PlayerId.Equals(userId)))
                 {
-                    player.PlayerOwner = "";
+                    player.PlayerId = "";
                 }
-                playerToOwn.PlayerOwner = userName;
+                playerToOwn.PlayerId = userId;
+                playerToOwn.PlayerName = userGivenName;
                 UpdateEveryone();
                 return true;
             }
@@ -121,9 +122,9 @@ namespace _5Straight.Data
         public bool RemovePlayerSlot(int playerNumber)
         {
             var playerToOwn = Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
-            if (!string.IsNullOrWhiteSpace(playerToOwn.PlayerOwner))
+            if (!string.IsNullOrWhiteSpace(playerToOwn.PlayerId))
             {
-                playerToOwn.PlayerOwner = "";
+                playerToOwn.PlayerId = "";
                 UpdateEveryone();
                 return true;
             }
@@ -133,9 +134,10 @@ namespace _5Straight.Data
         public void OwnPlayerSlotForAi(int playerNumber)
         {
             var playerToOwn = Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
-            if (string.IsNullOrWhiteSpace(playerToOwn.PlayerOwner))
+            if (string.IsNullOrWhiteSpace(playerToOwn.PlayerId))
             {
-                playerToOwn.PlayerOwner = AiPlayerFactory.GetRandomNameNoDuplicates(Players);
+                playerToOwn.PlayerId = Guid.NewGuid().ToString(); 
+                playerToOwn.PlayerName = AiPlayerFactory.GetRandomNameNoDuplicates(Players);
                 playerToOwn.Npc = AiPlayerFactory.BuildAi(playerToOwn, this);
                 UpdateEveryone();
             }
@@ -144,10 +146,10 @@ namespace _5Straight.Data
         public void RemoveAiFromPlayerSlot(int playerNumber)
         {
             var playerToClear = Players.Where(x => x.PlayerNumber.Equals(playerNumber)).First();
-            if (!string.IsNullOrWhiteSpace(playerToClear.PlayerOwner) && playerToClear.Npc != null)
+            if (!string.IsNullOrWhiteSpace(playerToClear.PlayerId) && playerToClear.Npc != null)
             {
                 playerToClear.Npc = null;
-                playerToClear.PlayerOwner = "";
+                playerToClear.PlayerId = "";
             }
             UpdateEveryone();
         }
@@ -260,7 +262,7 @@ namespace _5Straight.Data
 
         public bool ValidateAndStartGame()
         {
-            if (Players.Where(x => string.IsNullOrWhiteSpace(x.PlayerOwner)).Any())
+            if (Players.Where(x => string.IsNullOrWhiteSpace(x.PlayerId)).Any())
             {
                 return false;
             }
