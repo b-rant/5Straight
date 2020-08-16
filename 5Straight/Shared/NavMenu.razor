@@ -1,4 +1,5 @@
 ﻿@using _5Straight.Data
+@using System.Security.Claims
 @inject GameManager GameManager
 @inject NavigationManager NavigationManager
 @implements IDisposable
@@ -17,7 +18,7 @@
         <NavLink class="nav-link" >
             <Card Background="Background.Light" WhiteText="false" Style="color:black">
                 <CardBody Margin="Margin.Is0" Style="padding:.5rem">
-                   Welcome @authState.User.Identity.Name.Split('@')[0]!
+                   Welcome @authState.User.FindFirst(ClaimTypes.GivenName).Value!
                 </CardBody>
             </Card>
         </NavLink>
@@ -37,12 +38,12 @@
         @{
             foreach (var game in GameManager.Games)
             {
-                if (!game.Value.Won && game.Value.Players.Where(x => x.PlayerOwner.Equals(authState.User.Identity.Name)).Any())
+                if (!game.Value.Won && game.Value.Players.Where(x => x.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))).Any())
                 {
                     var gameName = game.Value.GameName.Substring(0, game.Value.GameName.Length > 20 ? 20 : game.Value.GameName.Length);
                     gameName = gameName.Length < game.Value.GameName.Length ? $"{gameName}..." : gameName;
                     string cardClass = "";
-                    if (game.Value.GameHasStarted && game.Value.CurrentPlayer.PlayerOwner.Equals(authState.User.Identity.Name)) { cardClass = "shadowTurnIndicator"; }
+                    if (game.Value.GameHasStarted && game.Value.CurrentPlayer.PlayerId.Equals(authState.User.FindFirstValue(ClaimTypes.NameIdentifier))) { cardClass = "shadowTurnIndicator"; }
                     <NavLink class="nav-link" href="@($"/GameBoard/{game.Value.GameId}")">
                         <Card Margin="Margin.Is1.FromBottom" Background="Background.Light" WhiteText="false" Style="color:black" Class="@cardClass">
                             <CardBody Margin="Margin.Is0" Style="padding:.5rem">

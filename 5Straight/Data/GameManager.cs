@@ -97,11 +97,11 @@ namespace _5Straight.Data
 
         #region Gameplay function passthrough
 
-        public bool UserSelectPlayerSlot(string gamePartitionKey, int playerNumber, string userName)
+        public bool UserSelectPlayerSlot(string gamePartitionKey, int playerNumber, string userId, string userGivenName)
         {
             try
             {
-                var success = Games[gamePartitionKey].OwnPlayerSlot(playerNumber, userName);
+                var success = Games[gamePartitionKey].OwnPlayerSlot(playerNumber, userId, userGivenName);
                 UpdateEveryone();
                 if (Games[gamePartitionKey].ValidateAndStartGame())
                 {
