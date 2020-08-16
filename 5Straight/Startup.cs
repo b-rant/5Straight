@@ -15,7 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using _5Straight.Data;
 using _5Straight.Data.Proxies;
-using Blazored.Modal;
 using Blazored.Toast;
 using Blazorise;
 using Blazorise.Bootstrap;
@@ -52,11 +51,10 @@ namespace _5Straight
             services.AddSingleton<TableService>();
             services.AddSingleton<GameTable>();
             services.AddSingleton<GameManager>();
-            services.AddBlazoredModal();
             services.AddBlazoredToast();
             services.AddBlazorise(options =>
                   {
-                      options.ChangeTextOnKeyPress = true;
+                      options.ChangeTextOnKeyPress = false;
                   }).AddBootstrapProviders().AddFontAwesomeIcons();
         }
 

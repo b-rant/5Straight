@@ -23,6 +23,8 @@ namespace _5Straight.Data
 
         public bool Won { get; set; }
 
+        public bool DeadCardDraw { get; set; }
+
         public int TurnNumber { get; set; }
 
         public int HighestPlayable { get; set; }
@@ -435,10 +437,11 @@ namespace _5Straight.Data
         {
             foreach (var player in Players)
             {
-                if (player.Hand.Where(x => x > HighestPlayable).Count() == 4)
+                int numDeadCards = player.Hand.Where(x => x > HighestPlayable).Count();
+                if (numDeadCards == 4 || (!Deck.Any() && numDeadCards.Equals(player.Hand.Count())))
                 {
                     Won = true;
-                    WinningPlayer = Players[(player.PlayerNumber + 1) % 2];
+                    DeadCardDraw = true;
                     return;
                 }
             }

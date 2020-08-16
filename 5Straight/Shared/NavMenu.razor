@@ -1,7 +1,6 @@
 ﻿@using _5Straight.Data
 @inject GameManager GameManager
 @inject NavigationManager NavigationManager
-@inject IModalService Modal
 @implements IDisposable
 
 
@@ -75,17 +74,6 @@
     }
 
     // Game Menu
-
-    void ShowNewGameModal()
-    {
-        var options = new ModalOptions()
-        {
-            DisableBackgroundCancel = true,
-
-        };
-
-        Modal.Show<NewGame>("Create New Game", options);
-    }
 
     protected override async void OnInitialized()
     {

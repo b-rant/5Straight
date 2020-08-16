@@ -66,7 +66,7 @@ else
         <div id="GameInfoView">
             <div class="container">
                 <div class="row">
-                    <button type="button" class="btn btn-outline-dark btn-sm" @onclick="() => SwitchBoardView()">Show Game Board</button>
+                    <button style="margin-bottom:1rem;" type="button" class="btn btn-outline-dark btn-sm" @onclick="() => SwitchBoardView()">Show Game Board</button>
                     <div class="col-md-12">
                         <h3>Previous Plays</h3>
                         <table class="table table-striped">
@@ -82,7 +82,7 @@ else
                             <tbody>
                                 @{
                                     var orderedPlays = game.Plays.OrderBy(x => x.TurnNumber).ToList();
-                                    if (game.Won)
+                                    if (game.Won && !game.DeadCardDraw)
                                     {
                                         <tr>
                                             <td>Team @(game.WinningPlayer.Team.TeamNumber+1) Wins!</td>
@@ -90,6 +90,12 @@ else
                                             <td>Play</td>
                                             <td>@orderedPlays.Last().PlayedLocationNumber</td>
                                             <td>@orderedPlays.Last().CardNumber</td>
+                                        </tr>
+                                    }
+                                    else if (game.DeadCardDraw)
+                                    {
+                                        <tr>
+                                            <td colspan="5">Game ended in a draw</td>
                                         </tr>
                                     }
                                     for (int i = game.Plays.Count - 1; i >= 0; i--)
@@ -125,7 +131,7 @@ else
         <div id="GameBoardView">
             <div class="container playerContainer">
                 <div class="row">
-                    <button type="button" class="btn btn-outline-dark btn-sm" @onclick="() => SwitchBoardView()">Show Game Info</button>
+                    <button style="margin-bottom:1rem;" type="button" class="btn btn-outline-dark btn-sm" @onclick="() => SwitchBoardView()">Show Game Info</button>
                     <div class="col-md-12" style="background-color:white">
                         <div class="nav-center">
                             <ul id="playerTabs" class="nav nav-pills" role="tablist">
@@ -216,48 +222,107 @@ else
                 {
                     cardShadowClass = "boardShadowPlayerTurn";
                 }
-                if (player.Hand.Any() || game.CurrentPlayer.Equals(player))
-                {
-                    <Row Margin="Margin.IsAuto">
-                        <Column ColumnSize="ColumnSize.IsAuto" Margin="Margin.IsAuto">
-                            <Card Background="Background.Light" WhiteText="false" Style="color:black" Class="@cardShadowClass">
-                                <CardBody Margin="Margin.Is0" Style="">
-                                    @if (game.CurrentPlayer.Equals(player))
+
+                <Row Margin="Margin.IsAuto">
+                    <Column ColumnSize="ColumnSize.IsAuto" Margin="Margin.IsAuto">
+                        <Card Background="Background.Light" WhiteText="false" Style="color:black" Class="@cardShadowClass">
+                            <CardBody Margin="Margin.Is0" Style="">
+                                @if (game.CurrentPlayer.Equals(player))
+                                {
+                                    @for (int i = 0; i < 4; i++)
                                     {
-                                        @for (int i = 0; i < 4; i++)
+                                        @if (player.Hand.Count >= i + 1)
                                         {
-                                            @if (player.Hand.Count >= i + 1)
-                                            {
-                                                int card = i;
-                                                <button type="button" class="btn btn-outline-dark btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(player.Hand[i])</button>
-                                            }
-                                        }
-                                        @if (player.Hand.Count <= 3 && game.Deck.Any())
-                                        {
-                                            <button type="button" class="btn btn-outline-success btn-lg" @onclick="() => MakeDraw()">Draw Card</button>
+                                            int card = i;
+                                            <button type="button" class="btn btn-outline-dark btn-lg @(selectedCard.Equals(card) ? "active" : "")" @onclick="() => SelectCard(card)">@(player.Hand[i])</button>
                                         }
                                     }
-                                    else
+                                    @if (player.Hand.Count <= 3 && game.Deck.Any())
                                     {
-                                        @for (int i = 0; i < 4; i++)
+                                        <button type="button" class="btn btn-outline-success btn-lg" @onclick="() => MakeDraw()">Draw Card</button>
+                                    }
+                                }
+                                else
+                                {
+                                    @for (int i = 0; i < 4; i++)
+                                    {
+                                        @if (player.Hand.Count >= i + 1)
                                         {
-                                            @if (player.Hand.Count >= i + 1)
-                                            {
-                                                int card = i;
-                                                <button type="button" class="btn btn-outline-dark btn-lg disabled">@(player.Hand[i])</button>
-                                            }
+                                            int card = i;
+                                            <button type="button" class="btn btn-outline-dark btn-lg disabled">@(player.Hand[i])</button>
                                         }
                                     }
-                                </CardBody>
-                            </Card>
-                        </Column>
-                    </Row>
-                }
-                
+                                    @if (player.Hand.Count <= 3 && game.Deck.Any())
+                                    {
+                                        <button type="button" class="btn btn-outline-success btn-lg disabled" >Draw Card</button>
+                                    }
+                                }
+                            </CardBody>
+                        </Card>
+                    </Column>
+                </Row>
+
             }
-            else
+            else if (!game.Won)
             {
                 <Alert Color="Color.Primary" Visible="true"> You are in Spectator Mode. You can watch this game, but cannot play.</Alert>
+            }
+            else if (game.Won)
+            {
+                 <Row Margin="Margin.IsAuto">
+                     <Column  ColumnSize="ColumnSize.IsAuto" Margin="Margin.IsAuto">
+                         <Heading Style="text-align: center;" Size="HeadingSize.Is3">Game Over!</Heading>
+                         <Table>
+                             <TableHeader>
+                                 <TableRow>
+                                     <TableHeaderCell>Winning Team</TableHeaderCell>
+                                     <TableHeaderCell>Winning Player</TableHeaderCell>
+                                     <TableHeaderCell>Winning Play</TableHeaderCell>
+                                 </TableRow>
+                             </TableHeader>
+                             <TableBody>
+                                 @if (game.DeadCardDraw)
+                                 {
+                                     <TableRow>
+                                         <TableRowCell ColumnSpan="3">Game ended in a Draw</TableRowCell>
+                                     </TableRow>
+                                 }
+                                 else
+                                 {
+                                     var lastPlay = game.Plays.OrderBy(x => x.TurnNumber).ToList().Last();
+                                     <TableRow>
+                                         <TableRowCell>@(game.WinningPlayer.Team.TeamNumber+1)</TableRowCell>
+                                         <TableRowCell>@game.WinningPlayer.PlayerOwner.Split('@')[0]</TableRowCell>
+                                         <TableRowCell>@lastPlay.CardNumber in the @lastPlay.PlayedLocationNumber</TableRowCell>
+                                     </TableRow>
+                                 }
+                             </TableBody>
+                         </Table>
+                         <Heading Style="text-align: center;" Size="HeadingSize.Is5">Ending Hands</Heading>
+                         <Table>
+                             <TableHeader>
+                                 <TableRow>
+                                     <TableHeaderCell>Player</TableHeaderCell>
+                                     <TableHeaderCell>Hand</TableHeaderCell>
+                                 </TableRow>
+                             </TableHeader>
+                             <TableBody>
+                                @foreach (var player in game.Players)
+	                            {
+		                            <TableRow>
+                                        <TableRowCell>@player.PlayerOwner</TableRowCell>
+                                        <TableRowCell>
+                                            @foreach (var card in player.Hand)
+                                            {
+                                                <button type="button" class="btn btn-outline-dark btn-lg disabled">@card</button>
+                                            }
+                                        </TableRowCell>
+                                    </TableRow>
+	                            }
+                             </TableBody>
+                         </Table>
+                     </Column>
+                </Row>
             }
         </div>
     }
@@ -330,7 +395,7 @@ else
             }
             mostRecentShowedPlay++;
         }
-        if (latestPlays.Any() && game.Won)
+        if (latestPlays.Any() && game.Won && !game.DeadCardDraw)
         {
             if (player != null && player.Team.TeamNumber.Equals(game.WinningPlayer.Team.TeamNumber))
             {
@@ -340,6 +405,10 @@ else
             {
                 toastService.ShowWarning($"Team {game.WinningPlayer.Team.TeamNumber + 1} won the game!", "GAME OVER!");
             }
+        }
+        if (game.DeadCardDraw)
+        {
+            toastService.ShowWarning($"Game ended in a draw due to dead cards", "GAME OVER!");
         }
     }
 

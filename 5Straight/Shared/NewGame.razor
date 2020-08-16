@@ -1,7 +1,6 @@
 ﻿@using _5Straight.Data
 @inject GameManager GameManager
-@inject IModalService ModalService
-
+@inject NavigationManager NavigationManager
 
 <Validations @ref="GameValidations" Mode="ValidationMode.Manual">
     <Validation Validator="@ValidationRule.IsNotEmpty">
@@ -53,7 +52,7 @@
     </Validation>
     <Field Horizontal="true" JustifyContent="JustifyContent.Start">
         <FieldBody ColumnSize="ColumnSize.Is12">
-            <Button Color="Color.Primary" Clicked="@Submit">Submit</Button>
+            <Button Style="float:right;" Color="Color.Primary" Clicked="@Submit">Submit</Button>
         </FieldBody>
     </Field>
 </Validations>
@@ -66,14 +65,8 @@
     public int NumberOfTeams { get; set; }
     public int NumberOfPlayersOnEachTeam { get; set; }
     public int TotalNumberOfPlayers => NumberOfTeams * NumberOfPlayersOnEachTeam;
-    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
     Validations GameValidations;
 
-    public void SubmitForm()
-    {
-        Game game = GameManager.CreateNewGame(GameName, NumberOfTeams, NumberOfPlayersOnEachTeam);
-        BlazoredModal.Close();
-    }
 
     void ValidatePlayers(ValidatorEventArgs e)
     {
@@ -94,7 +87,7 @@
         if (GameValidations.ValidateAll())
         {
             Game game = GameManager.CreateNewGame(GameName, NumberOfTeams, NumberOfPlayersOnEachTeam);
-            BlazoredModal.Close();
+            NavigationManager.NavigateTo($"/GameBoard/{game.GameId}");
         }
     }
 }

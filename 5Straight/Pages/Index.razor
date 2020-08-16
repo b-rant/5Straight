@@ -3,7 +3,6 @@
 @using Blazorise
 @using Blazorise.DataGrid
 @implements IDisposable
-@inject IModalService Modal
 @inject NavigationManager NavigationManager
 @inject GameManager GameManager
 
@@ -11,7 +10,7 @@
     <Column>
         <Card Margin="Margin.Is4.OnY">
             <CardHeader>
-                <CardTitle Size="4" Weight="TextWeight.Bold">Open Games<Button style="float:right;" class="btn btn-sm btn-primary" Clicked="ShowNewGameModal">New Game</Button></CardTitle>
+                <CardTitle Size="4" Weight="TextWeight.Bold">Open Games<Button style="float:right;" class="btn btn-sm btn-primary" Clicked="ShowModal">New Game</Button></CardTitle>
             </CardHeader>
             <CardBody>
                 <DataGrid TItem="Game" Data="@Games.Values.Where(x => !x.GameHasStarted)" Sortable="true" Filterable="true" Editable="false" ShowPager="true" PageSize="10" Striped="false" Bordered="true">
@@ -84,6 +83,20 @@
     </Column>
 </Row>
 
+<Modal @ref="newGameModalRef">
+    <ModalContent Size="ModalSize.Default" Centered="true">
+        <ModalHeader>
+            <ModalTitle>
+                New Game
+            </ModalTitle>
+            <CloseButton Clicked="@HideModal" />
+        </ModalHeader>
+        <ModalBody>
+            <NewGame />
+        </ModalBody>
+    </ModalContent>
+</Modal>
+
 
 
 @code
@@ -91,6 +104,8 @@
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; }
     private AuthenticationState authState;
+    private Modal newGameModalRef;
+
     private Dictionary<string, Game> Games = new Dictionary<string, Game>();
 
     protected override async Task OnInitializedAsync()
@@ -105,19 +120,19 @@
         await InvokeAsync(() => StateHasChanged());
     }
 
-    void ShowNewGameModal()
-    {
-        var options = new ModalOptions()
-        {
-            DisableBackgroundCancel = true
-        };
-
-        Modal.Show<NewGame>("Create New Game", options);
-    }
-
     public void Dispose()
     {
         GameManager.DisconnectClientFromGameManager(OnNotify);
+    }
+
+    private void ShowModal()
+    {
+        newGameModalRef.Show();
+    }
+
+    private void HideModal()
+    {
+        newGameModalRef.Hide();
     }
 
 }
